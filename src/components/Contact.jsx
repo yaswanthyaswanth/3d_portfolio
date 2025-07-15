@@ -45,7 +45,7 @@ const Contact = () => {
               <span className='text-white font-medium'>LinkedIn</span>
             </div>
             <a
-              href='https://www.linkedin.com/in/yaswanth-sundar-586a01251/'
+              href='https://www.linkedin.com/in/yaswanth-s-844773187/'
               target='_blank'
               rel='noopener noreferrer'
               className='text-secondary hover:text-white font-medium mt-2'
@@ -63,7 +63,7 @@ const Contact = () => {
               <span className='text-white font-medium'>ArtStation</span>
             </div>
             <a
-              href='https://yaswanthsundar.artstation.com/'
+              href='https://www.artstation.com/yaswanthsundar'
               target='_blank'
               rel='noopener noreferrer'
               className='text-secondary hover:text-white font-medium mt-2'
