@@ -1,0 +1,67 @@
+* [33mc7a95fb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Testing
+* [33m3f14cf8[m Testing
+* [33m0c5977e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m updated model rotation to face cursor + lighting adjustments
+* [33mb592767[m Fix
+* [33mb5074db[m Fix
+* [33mb552e55[m Fix
+* [33md314008[m Fix
+* [33m2c76d47[m Fix
+* [33mcab709b[m Fix
+* [33m63daede[m Fix
+* [33me0bf714[m Fix
+* [33m896681e[m Fix
+* [33mbad281d[m Fix
+* [33m2896342[m Fix
+* [33mffb3243[m Fix
+* [33m07f6713[m Fix
+* [33mf6b0c2f[m Fix
+* [33m09ef290[m Fix
+* [33mf22a473[m Fix
+* [33m09ad6ff[m Fix
+* [33ma810460[m Fix
+* [33m87cb155[m Fix
+* [33ma19e4d2[m Fix
+* [33mb6200f3[m Fix
+* [33m73aaf21[m Fix
+* [33md6b04d1[m Fix
+* [33mfb163c5[m Fix
+* [33m8f519d0[m Fix
+* [33mb3cd2f4[m Fix
+* [33mc52b75a[m Fix
+* [33m1c87cbd[m Fix
+* [33mfc96d28[m Fix
+* [33m9eb1159[m Fix
+* [33m8a87291[m Fix
+* [33m3b628bd[m Fix
+* [33m54df9b1[m Fix
+*   [33m7b80549[m Fix
+[32m|[m[33m\[m  
+[32m|[m * [33m90a885c[m Fix
+[32m|[m * [33mdf0a6dc[m Fix
+[32m|[m * [33m0a43ee9[m Fix
+[32m|[m * [33mfcaf5b6[m Fix
+[32m|[m * [33mcde87f6[m Fix
+[32m|[m * [33md2b7733[m Fix
+[32m|[m * [33m00be741[m Fix
+[32m|[m * [33m2f29f15[m Fix
+[32m|[m * [33m5881ee2[m Fix
+[32m|[m * [33mcd81a62[m Fix
+[32m|[m * [33mf642756[m Fix
+[32m|[m * [33m1731019[m Fix
+* [33m|[m [33mef63d6e[m Fix
+[33m|[m[33m/[m  
+* [33mace9982[m Fix
+* [33m325adbe[m Fix
+* [33ma427216[m Fix
+* [33medb2284[m Fix
+* [33m17c7be2[m Move herobg.png to public and update CSS path
+* [33m2463fb5[m Fix image file name case sensitivity
+* [33mc064e20[m Fix
+* [33m711868d[m Fix
+* [33m0549970[m Fix
+* [33mb07e94b[m Fix
+* [33mfaa5332[m Fix
+* [33m04afa1f[m Fix
+* [33m361c71a[m Fix
+* [33m034aa1a[m Fix
+* [33mad19d6e[m Initial commit
