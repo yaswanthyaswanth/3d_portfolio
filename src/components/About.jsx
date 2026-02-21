@@ -49,7 +49,7 @@ const About = () => {
         and interactive gameplay. With hands-on experience in Unreal Engine, 3D modeling,
         texturing, UV unwrapping, and level design, I bring ideas to life across both 2D 
         and 3D game projects. I also work with terrain generation tools like Gaea, adding
-        realism and detail to large-scale environments.
+        realism and detail to large-scale environmentsSS.
 
       </motion.p>
 
