@@ -45,7 +45,7 @@ const About = () => {
         variants={fadeIn("", "", 0.1, 1)}
         className="mt-4 text-secondary text-[17px] max-w-3xl leading-[30px]"
       >
-        I'm a passionate 3D Artist and Game Developer with a focus on immersive environments
+        I'm a a passionate 3D Artist and Game Developer with a focus on immersive environments
         and interactive gameplay. With hands-on experience in Unreal Engine, 3D modeling,
         texturing, UV unwrapping, and level design, I bring ideas to life across both 2D 
         and 3D game projects. I also work with terrain generation tools like Gaea, adding
