@@ -49,19 +49,31 @@ const Navbar = () => {
           </p>
         </Link>
 
-        <ul className='list-none hidden sm:flex flex-row gap-10'>
-          {navLinks.map((nav) => (
-            <li
-              key={nav.id}
-              className={`${
-                active === nav.title ? "text-white" : "text-secondary"
-              } hover:text-white text-[18px] font-medium cursor-pointer`}
-              onClick={() => setActive(nav.title)}
+        <div className='hidden sm:flex flex-row items-center gap-10'>
+          <ul className='list-none flex flex-row gap-10'>
+            {navLinks.map((nav) => (
+              <li
+                key={nav.id}
+                className={`${
+                  active === nav.title ? "text-white" : "text-secondary"
+                } hover:text-white text-[18px] font-medium cursor-pointer`}
+                onClick={() => setActive(nav.title)}
+              >
+                <a href={`#${nav.id}`}>{nav.title}</a>
+              </li>
+            ))}
+          </ul>
+
+          {/* 3D walkthrough — opens in a new tab, styled as a pill button */}
+          <a href={`${import.meta.env.BASE_URL}tour`} target='_blank' rel='noopener noreferrer'>
+            <button
+              className='bg-tertiary hover:bg-[#915EFF] transition-colors
+                         py-2 px-5 text-sm rounded-lg text-white font-bold shadow-card whitespace-nowrap'
             >
-              <a href={`#${nav.id}`}>{nav.title}</a>
-            </li>
-          ))}
-        </ul>
+              View 3D Walkthrough
+            </button>
+          </a>
+        </div>
 
         <div className='sm:hidden flex flex-1 justify-end items-center'>
           <img
@@ -91,6 +103,12 @@ const Navbar = () => {
                   <a href={`#${nav.id}`}>{nav.title}</a>
                 </li>
               ))}
+              {/* 3D walkthrough link in the mobile dropdown too */}
+              <li className='font-poppins font-medium cursor-pointer text-[16px] text-secondary hover:text-white'>
+                <a href={`${import.meta.env.BASE_URL}tour`} target='_blank' rel='noopener noreferrer'>
+                  View 3D Walkthrough
+                </a>
+              </li>
             </ul>
           </div>
         </div>

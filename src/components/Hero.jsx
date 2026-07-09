@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 
 import { styles } from "../styles";
 import { ComputersCanvas } from "./canvas";
@@ -24,16 +23,6 @@ const Hero = () => {
             game development using Unreal Engine and Unity, 
             bringing immersive worlds and game-ready assets to life.
           </p>
-
-          {/* Button that navigates to the /tour route */}
-          <Link to='/tour'>
-            <button
-              className='mt-6 bg-tertiary hover:bg-[#915EFF] transition-colors
-                         py-3 px-8 rounded-xl text-white font-bold shadow-card'
-            >
-              View 3D Walkthrough
-            </button>
-          </Link>
         </div>
       </div>
 
