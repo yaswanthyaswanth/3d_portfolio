@@ -14,6 +14,7 @@ import {
   tesla,
   shopify,
   mongodb,
+  propvr,
 } from "../assets";
 
 export const navLinks = [
@@ -74,12 +75,25 @@ const experiences = [
     company_name: "REVA University Bangalore",
     icon: meta,
     iconBg: "#E6DEDD",
-    date: "April 2025 - Present",
+    date: "April 2025",
     points: [
       "MY Contributions",
       "Level Design: Crafted immersive environments using modular assets and optimized geometry to enhance performance and gameplay flow.",
       "Inventory System: Developed a dynamic inventory system utilizing Unreal Engine's Blueprint scripting for efficient item management.",
       "Performance Optimization: Implemented Level of Detail (LOD) techniques and occlusion culling to ensure smooth gameplay on Oculus Quest.",
+    ],
+  },
+  {
+    title: "Environment Artist & Junior Unreal Artist",
+    company_name: "PropVR, Bangalore",
+    icon: propvr,
+    iconBg: "#383E56",
+    date: "Feb 2026 - March 2027 ---present",
+    points: [
+      "Collaborated in a 15-19 member team to deliver high-quality architectural visualization projects from scratch.",
+      "Developed 2 international projects based in Dubai and 1 domestic project, focusing on immersive environment design.",
+      "Responsible for 3D modeling, shading, level design, and overall environment creation using Unreal Engine.",
+      "Split and managed level design tasks within the team to ensure efficient workflow and optimized performance.",
     ],
   },
 ];
