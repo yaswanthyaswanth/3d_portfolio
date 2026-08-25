@@ -405,7 +405,7 @@ function HotspotBar({ currentId, onSelect, tourData, orderedIds }) {
   
   // Auto-scroll to show current room if it's named and clicked via 3D floor dots
   useEffect(() => {
-    const currentIndex = ORDERED_NAMED_IDS.indexOf(currentId);
+    const currentIndex = orderedIds.indexOf(currentId);
     if (currentIndex !== -1) {
       if (currentIndex < scrollIndex) {
         setScrollIndex(currentIndex);
@@ -423,7 +423,7 @@ function HotspotBar({ currentId, onSelect, tourData, orderedIds }) {
     setScrollIndex(v => Math.min(orderedIds.length - visibleCount, v + 1));
   };
 
-  const visibleIds = ORDERED_NAMED_IDS.slice(scrollIndex, scrollIndex + visibleCount);
+  const visibleIds = orderedIds.slice(scrollIndex, scrollIndex + visibleCount);
   const tabWidth = isMobile ? 110 : 140;
 
   return (
@@ -461,9 +461,9 @@ function HotspotBar({ currentId, onSelect, tourData, orderedIds }) {
       </div>
 
       <button 
-        style={{...arrowButtonStyle, opacity: scrollIndex >= ORDERED_NAMED_IDS.length - visibleCount ? 0.3 : 1}} 
+        style={{...arrowButtonStyle, opacity: scrollIndex >= orderedIds.length - visibleCount ? 0.3 : 1}} 
         onClick={goNext} 
-        disabled={scrollIndex >= ORDERED_NAMED_IDS.length - visibleCount}
+        disabled={scrollIndex >= orderedIds.length - visibleCount}
         aria-label="Scroll right"
       >
         ›
@@ -474,7 +474,7 @@ function HotspotBar({ currentId, onSelect, tourData, orderedIds }) {
 
 // ---- TOUR CONTROLLER ----------------------------------------------------
 function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
-  const [currentId, setCurrentId] = useState(ORDERED_NAMED_IDS[0]);
+  const [currentId, setCurrentId] = useState(orderedIds[0]);
   const [nextId, setNextId] = useState(null);
   const [pendingNextId, setPendingNextId] = useState(null);
   const [fade, setFade] = useState(1); // crossfade progress
