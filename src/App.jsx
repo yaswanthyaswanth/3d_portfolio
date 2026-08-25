@@ -43,7 +43,13 @@ const App = () => {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/tour" element={<VirtualTour />} />
+        <Route path="/tour" element={
+          <VirtualTour 
+            cameraGltf="/models/Penthouse Cameras.gltf" 
+            meshGlb="/models/Penthouse_Mesh.glb" 
+            panoramasFolder="/panoramas" 
+          />
+        } />
         <Route path="/mapping-check" element={<MappingCheck />} />
       </Routes>
     </BrowserRouter>
