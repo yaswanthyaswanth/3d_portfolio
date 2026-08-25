@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, Suspense, Component } from "react";
-import { Canvas, useLoader, useFrame } from "@react-three/fiber";
+import { Canvas, useLoader, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -619,7 +619,7 @@ const TOUR_DATA = {
   .filter((id) => TOUR_DATA[id].isNamed)
   .sort((a, b) => TOUR_DATA[a].order - TOUR_DATA[b].order);
 
-// ---- ERROR BOUNDARY (missing panorama images etc.) --------------------
+// ---- ERROR BOUNDARY & PRELOADING ----------------------------------------
 class TourErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -648,6 +648,20 @@ class TourErrorBoundary extends Component {
     }
     return this.props.children;
   }
+}
+
+// Invisible component that loads a texture into cache without rendering it,
+// then triggers a callback so we can start the transition seamlessly.
+function PreloadTexture({ url, onLoaded }) {
+  const texture = useLoader(THREE.TextureLoader, url);
+  useEffect(() => {
+    if (texture) {
+      // Small timeout ensures texture is uploaded to GPU before we crossfade
+      const tid = setTimeout(() => onLoaded(), 50);
+      return () => clearTimeout(tid);
+    }
+  }, [texture, onLoaded]);
+  return null;
 }
 
 // ---- THE PANORAMA SPHERE ----------------------------------------------
@@ -704,12 +718,12 @@ function SurfaceCursor({ position, normal }) {
       {/* Outer Ring */}
       <mesh>
         <ringGeometry args={[0.2, 0.22, 32]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.6} depthTest={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#4da3ff" transparent opacity={0.6} depthTest={false} side={THREE.DoubleSide} />
       </mesh>
       {/* Inner Dot/Ring */}
       <mesh>
         <ringGeometry args={[0.04, 0.08, 16]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthTest={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#4da3ff" transparent opacity={0.9} depthTest={false} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
@@ -723,7 +737,7 @@ function SurfaceCursor({ position, normal }) {
 
 
 
-function MeshDollhouseView({ worldPosition, showMesh }) {
+function MeshDollhouseView({ worldPosition, showMesh, isTransitioning }) {
   const { scene } = useGLTF("/models/Penthouse_Mesh.glb");
   const [cursorPos, setCursorPos] = useState(null);
   const [cursorNormal, setCursorNormal] = useState(null);
@@ -751,6 +765,7 @@ function MeshDollhouseView({ worldPosition, showMesh }) {
             -worldPosition[2],
           ]}
           onPointerMove={(e) => {
+            if (isTransitioning) return; // Ignore raycasts during transition
             if (e.intersections.length > 0) {
               const hit = e.intersections[0];
               setCursorPos(hit.point);
@@ -770,7 +785,7 @@ function MeshDollhouseView({ worldPosition, showMesh }) {
         </group>
       </group>
 
-      <SurfaceCursor position={cursorPos} normal={cursorNormal} />
+      {!isTransitioning && <SurfaceCursor position={cursorPos} normal={cursorNormal} />}
     </>
   );
 }
@@ -799,7 +814,7 @@ function Hotspot({ position, label, onClick }) {
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
       >
         <sphereGeometry args={[0.5, 16, 16]} />
-        <meshBasicMaterial transparent opacity={0} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
       <group ref={meshRef}>
@@ -842,8 +857,74 @@ function Hotspot({ position, label, onClick }) {
 
 // ---- DYNAMIC HOTSPOTS --------------------------------------------------
 function DynamicHotspots({ currentId, onTeleport }) {
+  const { scene } = useGLTF("/models/Penthouse_Mesh.glb");
   const currentPos = TOUR_DATA[currentId].worldPosition;
+  const [visibleHotspots, setVisibleHotspots] = useState([]);
   
+  // Raycast to find which cameras have a clear line of sight.
+  // We use useEffect with a small timeout to prevent the heavy raycasting 
+  // from blocking the main thread and causing jitter at the exact moment the teleport finishes.
+  useEffect(() => {
+    let isActive = true;
+    setVisibleHotspots([]); // Clear old hotspots immediately
+    
+    const timer = setTimeout(() => {
+      const visible = [];
+      const raycaster = new THREE.Raycaster();
+      const currentPosVec = new THREE.Vector3(...currentPos);
+      
+      // Crucial: ensure world matrices are updated for the raw GLTF scene before raycasting
+      scene.updateMatrixWorld(true);
+      
+      // Force materials to double-sided temporarily for accurate raycasting against thin walls
+      const originalSides = new Map();
+      scene.traverse((child) => {
+        if (child.isMesh && child.material) {
+          originalSides.set(child, child.material.side);
+          child.material.side = THREE.DoubleSide;
+        }
+      });
+      
+      Object.entries(TOUR_DATA).forEach(([id, data]) => {
+        if (id === currentId) return;
+        
+        const targetPosVec = new THREE.Vector3(...data.worldPosition);
+        const dir = new THREE.Vector3().subVectors(targetPosVec, currentPosVec);
+        const dist = dir.length();
+        dir.normalize();
+        
+        raycaster.set(currentPosVec, dir);
+        const hits = raycaster.intersectObject(scene, true);
+        
+        // Filter out hits right on top of the camera lens
+        const validHits = hits.filter(hit => hit.distance > 0.5);
+        
+        // If the ray hits a wall before it reaches the target camera (with 0.5m margin), hide it
+        if (validHits.length > 0 && validHits[0].distance < dist - 0.5) {
+          return; 
+        }
+        
+        visible.push(id);
+      });
+      
+      // Restore materials
+      scene.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material.side = originalSides.get(child);
+        }
+      });
+      
+      if (isActive) {
+        setVisibleHotspots(visible);
+      }
+    }, 50);
+    
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
+  }, [currentId, scene, currentPos]);
+
   return (
     <group rotation={[0, (-180 * Math.PI) / 180, 0]}>
       <group
@@ -853,19 +934,9 @@ function DynamicHotspots({ currentId, onTeleport }) {
           -currentPos[2],
         ]}
       >
-        {Object.entries(TOUR_DATA).map(([id, data]) => {
-          if (id === currentId) return null;
-          
+        {visibleHotspots.map((id) => {
+          const data = TOUR_DATA[id];
           const targetPos = data.worldPosition;
-          
-          // Calculate distance to current camera
-          const dx = targetPos[0] - currentPos[0];
-          const dy = targetPos[1] - currentPos[1];
-          const dz = targetPos[2] - currentPos[2];
-          const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-          
-          // Only show hotspots for cameras within 8 meters
-          if (dist > 8) return null;
           
           return (
             <Hotspot 
@@ -882,35 +953,51 @@ function DynamicHotspots({ currentId, onTeleport }) {
   );
 }
 
+// ---- CAMERA CONTROLLER ---------------------------------------------------
+// Removed zoom effect. Standard 75 FOV is used.
+
 // Custom 2D DragCursor removed in favor of 3D SurfaceCursor
 
 
 // ---- BOTTOM HOTSPOT BAR (named rooms only) -----------------------------
 function HotspotBar({ currentId, onSelect }) {
-  const scrollRef = useRef(null);
-  const currentIndex = ORDERED_NAMED_IDS.indexOf(currentId);
-  const isOnNamedRoom = currentIndex !== -1;
+  const [scrollIndex, setScrollIndex] = useState(0);
+  
+  // Auto-scroll to show current room if it's named and clicked via 3D floor dots
+  useEffect(() => {
+    const currentIndex = ORDERED_NAMED_IDS.indexOf(currentId);
+    if (currentIndex !== -1) {
+      if (currentIndex < scrollIndex) {
+        setScrollIndex(currentIndex);
+      } else if (currentIndex > scrollIndex + 1) {
+        setScrollIndex(currentIndex - 1);
+      }
+    }
+  }, [currentId]); 
 
   const goPrev = () => {
-    if (!isOnNamedRoom) return;
-    const prevIndex = (currentIndex - 1 + ORDERED_NAMED_IDS.length) % ORDERED_NAMED_IDS.length;
-    onSelect(ORDERED_NAMED_IDS[prevIndex]);
+    setScrollIndex(v => Math.max(0, v - 1));
   };
 
   const goNext = () => {
-    if (!isOnNamedRoom) return;
-    const nextIndex = (currentIndex + 1) % ORDERED_NAMED_IDS.length;
-    onSelect(ORDERED_NAMED_IDS[nextIndex]);
+    setScrollIndex(v => Math.min(ORDERED_NAMED_IDS.length - 4, v + 1));
   };
+
+  const visibleIds = ORDERED_NAMED_IDS.slice(scrollIndex, scrollIndex + 4);
 
   return (
     <div style={hotspotBarWrapperStyle}>
-      <button style={arrowButtonStyle} onClick={goPrev} aria-label="Previous room">
+      <button 
+        style={{...arrowButtonStyle, opacity: scrollIndex === 0 ? 0.3 : 1}} 
+        onClick={goPrev} 
+        disabled={scrollIndex === 0}
+        aria-label="Scroll left"
+      >
         ‹
       </button>
 
-      <div ref={scrollRef} style={hotspotBarScrollStyle}>
-        {ORDERED_NAMED_IDS.map((id) => {
+      <div style={{ ...hotspotBarScrollStyle, width: "auto", justifyContent: 'center' }}>
+        {visibleIds.map((id) => {
           const isActive = id === currentId;
           return (
             <button
@@ -919,6 +1006,9 @@ function HotspotBar({ currentId, onSelect }) {
               style={{
                 ...hotspotTabStyle,
                 ...(isActive ? hotspotTabActiveStyle : {}),
+                width: 140, // consistent width
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}
             >
               {TOUR_DATA[id].name}
@@ -927,7 +1017,12 @@ function HotspotBar({ currentId, onSelect }) {
         })}
       </div>
 
-      <button style={arrowButtonStyle} onClick={goNext} aria-label="Next room">
+      <button 
+        style={{...arrowButtonStyle, opacity: scrollIndex >= ORDERED_NAMED_IDS.length - 4 ? 0.3 : 1}} 
+        onClick={goNext} 
+        disabled={scrollIndex >= ORDERED_NAMED_IDS.length - 4}
+        aria-label="Scroll right"
+      >
         ›
       </button>
     </div>
@@ -938,6 +1033,7 @@ function HotspotBar({ currentId, onSelect }) {
 export default function VirtualTour() {
   const [currentId, setCurrentId] = useState(ORDERED_NAMED_IDS[0]);
   const [nextId, setNextId] = useState(null);
+  const [pendingNextId, setPendingNextId] = useState(null);
   const [fade, setFade] = useState(1); // crossfade progress
   const [showMesh, setShowMesh] = useState(false);
   const fadingRef = useRef(false);
@@ -945,21 +1041,27 @@ export default function VirtualTour() {
   const current = TOUR_DATA[currentId];
 
   const teleportTo = (targetId) => {
-    if (fadingRef.current || targetId === currentId) return;
-    fadingRef.current = true;
-    setNextId(targetId);
+    if (fadingRef.current || targetId === currentId || pendingNextId) return;
+    setPendingNextId(targetId);
+  };
 
-    // simple crossfade — swap for a GSAP tween if you want easing,
-    // since gsap is already in your package.json
+  const startTransition = () => {
+    if (!pendingNextId) return;
+    fadingRef.current = true;
+    setNextId(pendingNextId);
+
+    // Medium transition time: ~0.8 seconds (t += 0.02 per frame at 60fps)
     let t = 0;
     const step = () => {
-      t += 0.05;
+      t += 0.02;
+      if (t > 1) t = 1;
       setFade(1 - t);
       if (t < 1) {
         requestAnimationFrame(step);
       } else {
-        setCurrentId(targetId);
+        setCurrentId(pendingNextId);
         setNextId(null);
+        setPendingNextId(null);
         setFade(1);
         fadingRef.current = false;
       }
@@ -970,19 +1072,27 @@ export default function VirtualTour() {
   return (
     <TourErrorBoundary>
       <div style={{ width: "100%", height: "100vh", position: "relative", background: "#111" }}>
-        <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }} style={{ cursor: "none" }}>
+        <Canvas 
+          camera={{ position: [0, 0, 0.1], fov: 75 }} 
+          style={{ cursor: "none" }}
+          gl={{ toneMapping: THREE.NoToneMapping }} // Preserves raw image colors without adding contrast/darkness
+        >
           <Suspense fallback={<Html center style={{ color: "#fff" }}>Loading panorama…</Html>}>
-            {/* Always render mesh for raycasting, toggle visibility inside via showMesh prop */}
-            <ambientLight intensity={0.9} />
-            <directionalLight position={[5, 10, 5]} intensity={1.2} />
-            <MeshDollhouseView worldPosition={current.worldPosition} showMesh={showMesh} />
+            
+            {/* Background loader for the next panorama so it doesn't flicker */}
+            {pendingNextId && (
+              <Suspense fallback={null}>
+                <PreloadTexture 
+                  url={TOUR_DATA[pendingNextId].panorama} 
+                  onLoaded={startTransition} 
+                />
+              </Suspense>
+            )}
 
+            {/* 1. Draw panoramas FIRST (behind everything) with pure crossfade */}
             {!showMesh && (
               <>
-                {/* current panorama, fading out */}
-                <PanoramaSphere imageUrl={current.panorama} opacity={fade} />
-
-                {/* next panorama, fading in, only while transitioning */}
+                <PanoramaSphere imageUrl={current.panorama} opacity={1} />
                 {nextId && (
                   <PanoramaSphere
                     imageUrl={TOUR_DATA[nextId].panorama}
@@ -992,8 +1102,19 @@ export default function VirtualTour() {
               </>
             )}
 
-            {/* dynamic floor hotspots */}
-            <DynamicHotspots currentId={currentId} onTeleport={teleportTo} />
+            {/* 2. Draw walls (invisible but write depth) */}
+            <ambientLight intensity={0.9} />
+            <directionalLight position={[5, 10, 5]} intensity={1.2} />
+            <MeshDollhouseView 
+              worldPosition={current.worldPosition} 
+              showMesh={showMesh} 
+              isTransitioning={pendingNextId !== null || nextId !== null} 
+            />
+
+            {/* 3. Draw hotspots (dynamic) - Hidden during transition for clean effect */}
+            {!pendingNextId && !nextId && (
+              <DynamicHotspots currentId={currentId} onTeleport={teleportTo} />
+            )}
 
             {/* look-around only, no dolly/zoom-out of the sphere */}
             <OrbitControls
