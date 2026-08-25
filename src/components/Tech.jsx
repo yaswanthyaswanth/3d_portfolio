@@ -5,6 +5,7 @@ import { technologies } from "../constants";
 
 const Tech = () => {
   const [loaded, setLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     let loadedCount = 0;
@@ -24,6 +25,14 @@ const Tech = () => {
         if (loadedCount === totalImages) setLoaded(true);
       };
     });
+    
+    // Detect mobile to prevent WebGL context limit crashes on Chrome
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   if (!loaded) return null;
@@ -31,9 +40,13 @@ const Tech = () => {
   return (
     <div className='flex flex-row flex-wrap justify-center gap-10'>
       {technologies.map((technology) => (
-        <div className='w-28 text-center' key={technology.name}>
-          <div className='w-28 h-28'>
-            <BallCanvas icon={technology.icon} />
+        <div className='w-28 text-center flex flex-col items-center' key={technology.name}>
+          <div className='w-28 h-28 flex justify-center items-center'>
+            {isMobile ? (
+              <img src={technology.icon} alt={technology.name} className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(145,94,255,0.5)]" />
+            ) : (
+              <BallCanvas icon={technology.icon} />
+            )}
           </div>
           <div className='mt-2'>
             <p className='text-white text-sm font-medium'>{technology.name}</p>
