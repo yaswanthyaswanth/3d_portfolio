@@ -705,14 +705,16 @@ function MeshDollhouseView({ worldPosition }) {
   }, [scene]);
 
   return (
-    <group
-      position={[
-        -worldPosition[0],
-        -worldPosition[1],
-        -worldPosition[2],
-      ]}
-    >
-      <primitive object={flatScene} />
+    <group rotation={[0, (-180 * Math.PI) / 180, 0]}>
+      <group
+        position={[
+          -worldPosition[0],
+          -worldPosition[1],
+          -worldPosition[2],
+        ]}
+      >
+        <primitive object={flatScene} />
+      </group>
     </group>
   );
 }
