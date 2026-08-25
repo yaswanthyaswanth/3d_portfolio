@@ -50,6 +50,19 @@ const App = () => {
             panoramasFolder="/panoramas" 
           />
         } />
+        
+        {/* ✨ HOW TO ADD A SECOND TOUR ✨ */}
+        {/* 1. Put your new files in the public folder. */}
+        {/* 2. Uncomment the block below and change the filenames to match yours! */}
+        
+        <Route path="/tour2" element={
+          <VirtualTour 
+            cameraGltf="/models/Project2_Cameras.gltf" 
+            meshGlb="/models/Project2_Mesh.glb" 
+            panoramasFolder="/panoramas_project2" 
+          />
+        } />
+
         <Route path="/mapping-check" element={<MappingCheck />} />
       </Routes>
     </BrowserRouter>
