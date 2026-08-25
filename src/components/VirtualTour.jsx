@@ -287,8 +287,8 @@ function Hotspot({ position, label, onClick }) {
 }
 
 // ---- DYNAMIC HOTSPOTS --------------------------------------------------
-function DynamicHotspots({ currentId, onTeleport, tourData }) {
-  const { scene } = useGLTF("/models/Penthouse_Mesh.glb");
+function DynamicHotspots({ currentId, onTeleport, tourData, meshGlb }) {
+  const { scene } = useGLTF(meshGlb);
   const currentPos = tourData[currentId].worldPosition;
   const [visibleHotspots, setVisibleHotspots] = useState([]);
   
@@ -603,7 +603,7 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
 
             {/* 3. Draw hotspots (dynamic) - Hidden during transition for clean effect */}
             {!pendingNextId && !nextId && (
-              <DynamicHotspots currentId={currentId} onTeleport={teleportTo} tourData={tourData} />
+              <DynamicHotspots currentId={currentId} onTeleport={teleportTo} tourData={tourData} meshGlb={meshGlb} />
             )}
 
             {/* look-around only, no dolly/zoom-out of the sphere */}
@@ -741,9 +741,9 @@ const arrowButtonStyle = {
 
 
 export default function VirtualTour({ 
-  cameraGltf = "/models/Penthouse Cameras.gltf", 
-  meshGlb = "/models/Penthouse_Mesh.glb", 
-  panoramasFolder = "/panoramas" 
+  cameraGltf = "/models/Penthouse/Penthouse Cameras.gltf", 
+  meshGlb = "/models/Penthouse/Penthouse_Mesh.glb", 
+  panoramasFolder = "/panoramas/Penthouse" 
 }) {
   const [tourData, setTourData] = useState(null);
   const [orderedIds, setOrderedIds] = useState([]);
