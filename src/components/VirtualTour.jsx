@@ -168,7 +168,7 @@ function SurfaceCursor({ position, normal }) {
 
 
 
-function MeshDollhouseView({ worldPosition, showMesh, isTransitioning, meshGlb }) {
+function MeshDollhouseView({ worldPosition, showMesh, isTransitioning, meshGlb, tourData, onTeleport }) {
   const { scene } = useGLTF(meshGlb);
   const [cursorPos, setCursorPos] = useState(null);
   const [cursorNormal, setCursorNormal] = useState(null);
@@ -210,6 +210,30 @@ function MeshDollhouseView({ worldPosition, showMesh, isTransitioning, meshGlb }
           onPointerOut={() => {
             setCursorPos(null);
             setCursorNormal(null);
+          }}
+          onClick={(e) => {
+            if (isTransitioning || !onTeleport || !tourData) return;
+            e.stopPropagation();
+            if (e.intersections.length > 0) {
+              const hit = e.intersections[0];
+              const localPoint = hit.object.worldToLocal(hit.point.clone());
+              
+              let closestId = null;
+              let minDistance = 3.0; // generous 3m radius
+
+              Object.entries(tourData).forEach(([id, data]) => {
+                const camPos = new THREE.Vector3(...data.worldPosition);
+                const dist = camPos.distanceTo(localPoint);
+                if (dist < minDistance) {
+                  minDistance = dist;
+                  closestId = id;
+                }
+              });
+
+              if (closestId) {
+                onTeleport(closestId);
+              }
+            }
           }}
         >
           <primitive object={activeScene} />
@@ -599,7 +623,10 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
             <MeshDollhouseView 
               worldPosition={current.worldPosition} 
               showMesh={showMesh} 
-              isTransitioning={pendingNextId !== null || nextId !== null} meshGlb={meshGlb} 
+              isTransitioning={pendingNextId !== null || nextId !== null} 
+              meshGlb={meshGlb} 
+              tourData={tourData}
+              onTeleport={teleportTo}
             />
 
             {/* 3. Draw hotspots (dynamic) - Hidden during transition for clean effect */}
