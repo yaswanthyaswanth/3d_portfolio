@@ -504,7 +504,16 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
     }
   };
 
-  const current = tourData[currentId];
+  const current = currentId ? tourData[currentId] : null;
+
+  if (!current) {
+    return (
+      <div style={errorScreenStyle}>
+        <h3>Virtual tour couldn't load</h3>
+        <p>No valid cameras were found in the provided GLTF file.</p>
+      </div>
+    );
+  }
 
   const teleportTo = (targetId) => {
     if (fadingRef.current || targetId === currentId || pendingNextId) return;

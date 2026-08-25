@@ -32,21 +32,41 @@ export function buildTourGraph(scene, panoramasFolder) {
   const nodes = [];
   const tourData = {};
 
-  // 1. Extract all camera nodes
+  // 1. Extract all camera nodes robustly
   scene.traverse((child) => {
-    // In Blender, cameras often come in as Object3D or PerspectiveCamera. 
-    // We filter by checking if it has a translation and matches our expected node naming.
-    if ((child.isCamera || child.name.includes("cam_") || child.type === "Object3D" || child.type === "Group") && child.parent?.type === "Scene") {
-      // Ignore root objects that are just holding geometry, focus on the camera locators
-      if (child.name !== "Scene") {
-         nodes.push(child);
-      }
+    // In Blender GLTF, cameras are often Object3D, Group, or PerspectiveCamera.
+    // We want to avoid pulling in nested geometry parts, root scenes, or standard wrappers.
+    if (!child.isMesh && child.name !== "Scene" && child.name !== "OSG_Scene" && child.name !== "RootNode") {
+       // Only add nodes that actually have the 'cam_' prefix, or match our known room names,
+       // OR if we know all non-mesh children in this specific export are cameras.
+       // The safest way is to check if it's an Object3D/Group that has a translation
+       if (child.isCamera || child.name.includes("cam_") || child.type === "Object3D" || child.type === "Group") {
+          // Exclude root wrappers
+          if (child.parent && child.parent.name !== "OSG_Scene" && child.parent.type !== "Scene") {
+             nodes.push(child);
+          }
+       }
     }
   });
 
-  // If traverse didn't catch them properly because of GLTF nesting, ensure we only pick nodes that look like cameras
-  // Usually, they are direct children of the scene
-  const cameraNodes = scene.children.filter(c => c.name !== "Scene");
+  // If the above strict traversal missed them (because of different nesting), fallback to direct children
+  let cameraNodes = nodes;
+  if (cameraNodes.length === 0) {
+    let root = scene;
+    if (scene.children.length === 1 && scene.children[0].children.length > 1) {
+      root = scene.children[0];
+    } else if (scene.children.length === 1 && scene.children[0].children.length === 1 && scene.children[0].children[0].children.length > 1) {
+      root = scene.children[0].children[0];
+    }
+    cameraNodes = root.children.filter(c => c.name !== "Scene" && !c.isMesh);
+  }
+
+  // Debugging so we can see it in the console
+  console.log("Found Camera Nodes:", cameraNodes.length, cameraNodes.map(n => n.name));
+
+  if (cameraNodes.length === 0) {
+    throw new Error("No camera nodes found in the GLTF! Make sure you exported the cameras correctly.");
+  }
 
   let orderCounter = 0;
 
