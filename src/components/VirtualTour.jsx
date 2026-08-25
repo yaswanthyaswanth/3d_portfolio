@@ -251,7 +251,7 @@ function Hotspot({ position, label, onClick }) {
       <group ref={meshRef}>
         {/* visible ring — flat on floor */}
         <mesh renderOrder={1}>
-          <ringGeometry args={[0.3, 0.4, 32]} />
+          <ringGeometry args={[0.15, 0.2, 32]} />
           <meshBasicMaterial
             color={hovered ? "#ffffff" : "#4da3ff"}
             transparent
@@ -262,7 +262,7 @@ function Hotspot({ position, label, onClick }) {
         </mesh>
         {/* soft outer glow */}
         <mesh renderOrder={0}>
-          <ringGeometry args={[0.4, 0.6, 32]} />
+          <ringGeometry args={[0.2, 0.3, 32]} />
           <meshBasicMaterial
             color={hovered ? "#ffffff" : "#4da3ff"}
             transparent
@@ -272,7 +272,7 @@ function Hotspot({ position, label, onClick }) {
           />
         </mesh>
         <mesh renderOrder={1}>
-          <circleGeometry args={[0.15, 24]} />
+          <circleGeometry args={[0.08, 24]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.8} depthTest={false} />
         </mesh>
       </group>
@@ -479,6 +479,7 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
   const [pendingNextId, setPendingNextId] = useState(null);
   const [fade, setFade] = useState(1); // crossfade progress
   const [showMesh, setShowMesh] = useState(false);
+  const [showPoints, setShowPoints] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [hasStartedMobile, setHasStartedMobile] = useState(false);
   const fadingRef = useRef(false);
@@ -602,7 +603,7 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
             />
 
             {/* 3. Draw hotspots (dynamic) - Hidden during transition for clean effect */}
-            {!pendingNextId && !nextId && (
+            {!pendingNextId && !nextId && showPoints && (
               <DynamicHotspots currentId={currentId} onTeleport={teleportTo} tourData={tourData} meshGlb={meshGlb} />
             )}
 
@@ -617,12 +618,16 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
 
         <div style={hudStyle}>{current.name}</div>
 
-        <button
-          style={meshToggleButtonStyle}
-          onClick={() => setShowMesh((v) => !v)}
-        >
-          {showMesh ? "Hide Mesh" : "Show Mesh"}
-        </button>
+        {!isMobile && (
+          <button style={meshToggleButtonStyle} onClick={() => setShowMesh(!showMesh)}>
+            {showMesh ? "Hide Mesh" : "Show Mesh"}
+          </button>
+        )}
+        {!isMobile && (
+          <button style={{ ...meshToggleButtonStyle, top: 70 }} onClick={() => setShowPoints(!showPoints)}>
+            {showPoints ? "Hide Points" : "Show Points"}
+          </button>
+        )}
 
         <HotspotBar currentId={currentId} onSelect={teleportTo} tourData={tourData} orderedIds={orderedIds} />
       </div>
