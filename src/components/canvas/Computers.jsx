@@ -87,10 +87,15 @@ const ComputersCanvas = () => {
       <CanvasErrorBoundary>
         <Canvas
           frameloop='demand'
-          shadows
-          dpr={isMobile ? 1 : [1, 2]} // Reduce pixel ratio on mobile to prevent GPU Out of Memory crashes
+          shadows={!isMobile} // Disable memory-heavy shadows on mobile
+          dpr={isMobile ? 1 : [1, 2]}
           camera={{ position: [20, 3, 5], fov: 25 }}
-          gl={{ preserveDrawingBuffer: true, alpha: true }}
+          gl={{ 
+            preserveDrawingBuffer: false, // Critical for preventing mobile crashes
+            alpha: true,
+            antialias: !isMobile, // Disable antialiasing on mobile to save memory
+            powerPreference: "high-performance" 
+          }}
           className="touch-pinch-zoom"
         >
       <Suspense fallback={<CanvasLoader />}>
