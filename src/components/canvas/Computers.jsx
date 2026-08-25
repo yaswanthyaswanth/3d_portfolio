@@ -4,6 +4,25 @@ import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
 
 import CanvasLoader from "../Loader";
 
+class CanvasErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.warn("WebGL Canvas crashed. Hiding to prevent full page white screen.", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return null; // Fallback: hide the 3D model instead of crashing the app
+    }
+    return this.props.children;
+  }
+}
+
 const Computers = ({ isMobile }) => {
   const computer = useGLTF("./desktop_pc/scene.gltf");
 
@@ -64,14 +83,16 @@ const ComputersCanvas = () => {
   }, []);
 
   return (
-    <Canvas
-      frameloop='demand'
-      shadows
-      dpr={[1, 2]}
-      camera={{ position: [20, 3, 5], fov: 25 }}
-      gl={{ preserveDrawingBuffer: true, alpha: true }}
-      className="touch-pinch-zoom"
-    >
+    <div style={{ width: "100%", height: "100%" }}>
+      <CanvasErrorBoundary>
+        <Canvas
+          frameloop='demand'
+          shadows
+          dpr={isMobile ? 1 : [1, 2]} // Reduce pixel ratio on mobile to prevent GPU Out of Memory crashes
+          camera={{ position: [20, 3, 5], fov: 25 }}
+          gl={{ preserveDrawingBuffer: true, alpha: true }}
+          className="touch-pinch-zoom"
+        >
       <Suspense fallback={<CanvasLoader />}>
         <OrbitControls
           enableZoom={false}
@@ -87,6 +108,8 @@ const ComputersCanvas = () => {
       </Suspense>
       <Preload all />
     </Canvas>
+  </CanvasErrorBoundary>
+</div>
   );
 };
 
