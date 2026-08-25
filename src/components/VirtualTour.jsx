@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef, Suspense, Component } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense, Component } from "react";
 import { Canvas, useLoader } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls, Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+
+// Shared camera rotation baked into every panorama render (constant across
+// all 48 gltf camera nodes) — used to rotate the mesh into the same local
+// frame as the photo so "Show Mesh" lines up exactly with the photo view.
+
 
 /**
  * ============================================================
@@ -46,6 +51,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 04",
     panorama: "/panoramas/cam_out_water_seating_04.jpg",
     isNamed: false,
+    worldPosition: [3.1797, -0.0334, 34.7842],
     hotspots: [
       { targetId: "camOutWaterSeating05", position: [-4.07, 0.0, -4.41], label: "Out Water Seating 05" },
       { targetId: "camOutWaterSeating02", position: [-3.63, 0.0, 4.78], label: "Out Water Seating 02" },
@@ -56,6 +62,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 06",
     panorama: "/panoramas/cam_out_water_seating_06.jpg",
     isNamed: false,
+    worldPosition: [6.7646, -0.0334, 27.4529],
     hotspots: [
       { targetId: "camPassage05", position: [-5.85, 0.01, -1.35], label: "Passage 05" },
       { targetId: "camPassage04", position: [-5.98, 0.0, -0.45], label: "Passage 04" },
@@ -67,6 +74,7 @@ const TOUR_DATA = {
     name: "Garden Area 10",
     panorama: "/panoramas/cam_garden_area_10.jpg",
     isNamed: false,
+    worldPosition: [-8.3750, -0.0334, 25.5840],
     hotspots: [
       { targetId: "camOutWaterSeating03", position: [5.74, 0.0, -1.76], label: "Out Water Seating 03" },
       { targetId: "camGardenArea08", position: [-6.0, -0.18, 0.0], label: "Garden Area 08" },
@@ -78,6 +86,7 @@ const TOUR_DATA = {
     name: "Passage 05",
     panorama: "/panoramas/cam_passage_05.jpg",
     isNamed: false,
+    worldPosition: [7.5664, -0.0258, 23.9900],
     hotspots: [
       { targetId: "camOutWaterSeating06", position: [5.85, -0.01, 1.35], label: "Out Water Seating 06" },
       { targetId: "camPassage04", position: [-6.0, 0.0, 0.0], label: "Passage 04" },
@@ -89,6 +98,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/penthouse.jpg",
     isNamed: true,
     order: 0,
+    worldPosition: [7.5664, 0.0353, -7.0327],
     hotspots: [
       { targetId: "passage", position: [-5.97, 0.64, 0.0], label: "Passage" },
       { targetId: "camPassage01", position: [6.0, -0.07, -0.0], label: "Passage 01" },
@@ -101,6 +111,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/passage.jpg",
     isNamed: true,
     order: 1,
+    worldPosition: [7.5664, 0.5982, -12.2883],
     hotspots: [
       { targetId: "penthouse", position: [5.97, -0.64, -0.0], label: "Penthouse" },
       { targetId: "swimmingPool", position: [-1.03, -0.05, -5.91], label: "Swimming Pool" },
@@ -115,6 +126,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/swimming_pool.jpg",
     isNamed: true,
     order: 2,
+    worldPosition: [12.0010, 0.5579, -13.0630],
     hotspots: [
       { targetId: "passage", position: [1.03, 0.05, 5.91], label: "Passage" },
       { targetId: "camSunkenSeating01", position: [-6.0, 0.11, 0.0], label: "Sunken Seating 01" },
@@ -127,6 +139,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/meeting_table.jpg",
     isNamed: true,
     order: 3,
+    worldPosition: [9.5869, 0.6315, -19.3093],
     hotspots: [
       { targetId: "ceoDesk", position: [-5.69, -0.03, -1.91], label: "CEO Desk" },
       { targetId: "camCeoDesk01", position: [-5.37, -0.04, 2.67], label: "Ceo Desk 01" },
@@ -138,6 +151,7 @@ const TOUR_DATA = {
     name: "Garden Area 06",
     panorama: "/panoramas/cam_garden_area_06.jpg",
     isNamed: false,
+    worldPosition: [-8.3750, -0.2134, 12.9194],
     hotspots: [
       { targetId: "camGardenArea07", position: [6.0, 0.17, 0.16], label: "Garden Area 07" },
       { targetId: "camGardenArea05", position: [-5.59, 0.0, 2.18], label: "Garden Area 05" },
@@ -148,6 +162,7 @@ const TOUR_DATA = {
     name: "Garden Area 07",
     panorama: "/panoramas/cam_garden_area_07.jpg",
     isNamed: false,
+    worldPosition: [-8.4648, -0.1185, 16.2417],
     hotspots: [
       { targetId: "camGardenArea06", position: [-6.0, -0.17, -0.16], label: "Garden Area 06" },
       { targetId: "camGardenArea08", position: [6.0, -0.17, -0.16], label: "Garden Area 08" },
@@ -158,6 +173,7 @@ const TOUR_DATA = {
     name: "Passage 01",
     panorama: "/panoramas/cam_passage_01.jpg",
     isNamed: false,
+    worldPosition: [7.5664, -0.0258, -1.7004],
     hotspots: [
       { targetId: "penthouse", position: [-6.0, 0.07, 0.0], label: "Penthouse" },
       { targetId: "camPassage02", position: [6.0, 0.0, -0.0], label: "Passage 02" },
@@ -170,6 +186,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/ceo_desk.jpg",
     isNamed: true,
     order: 4,
+    worldPosition: [10.7568, 0.6139, -22.7971],
     hotspots: [
       { targetId: "meetingTable", position: [5.69, 0.03, 1.91], label: "Meeting Table" },
       { targetId: "camCeoDesk01", position: [-0.49, -0.02, 5.98], label: "Ceo Desk 01" },
@@ -180,6 +197,7 @@ const TOUR_DATA = {
     name: "Passage 02",
     panorama: "/panoramas/cam_passage_02.jpg",
     isNamed: false,
+    worldPosition: [7.5664, -0.0258, 3.9016],
     hotspots: [
       { targetId: "penthouse", position: [-6.0, 0.03, 0.0], label: "Penthouse" },
       { targetId: "camPassage01", position: [-6.0, 0.0, 0.0], label: "Passage 01" },
@@ -190,6 +208,7 @@ const TOUR_DATA = {
     name: "Landscape 01",
     panorama: "/panoramas/cam_landscape_01.jpg",
     isNamed: false,
+    worldPosition: [-6.0420, -0.2134, -21.1094],
     hotspots: [
       { targetId: "landscape", position: [-0.0, 0.0, -6.0], label: "Landscape" },
       { targetId: "camLandscapeStairs03", position: [-6.0, 0.0, 0.0], label: "Landscape Stairs 03" },
@@ -201,6 +220,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/landscape.jpg",
     isNamed: true,
     order: 5,
+    worldPosition: [-2.5898, -0.2134, -21.1094],
     hotspots: [
       { targetId: "camLandscape01", position: [0.0, 0.0, 6.0], label: "Landscape 01" },
       { targetId: "camLandscapeStairs03", position: [-4.03, 0.0, 4.45], label: "Landscape Stairs 03" },
@@ -215,6 +235,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/landscape_stairs.jpg",
     isNamed: true,
     order: 6,
+    worldPosition: [3.5156, 0.5816, -24.6692],
     hotspots: [
       { targetId: "camCeoDesk01", position: [2.16, 0.03, -5.6], label: "Ceo Desk 01" },
       { targetId: "camLandscapeStairs02", position: [0.0, -0.77, 5.95], label: "Landscape Stairs 02" },
@@ -225,6 +246,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 03",
     panorama: "/panoramas/cam_out_water_seating_03.jpg",
     isNamed: false,
+    worldPosition: [-7.4482, -0.0334, 28.6030],
     hotspots: [
       { targetId: "camGardenArea10", position: [-5.74, 0.0, 1.76], label: "Garden Area 10" },
       { targetId: "camOutWaterSeating02", position: [2.26, 0.0, -5.56], label: "Out Water Seating 02" },
@@ -237,6 +259,7 @@ const TOUR_DATA = {
     name: "Landscape Stairs 03",
     panorama: "/panoramas/cam_landscape_stairs_03.jpg",
     isNamed: false,
+    worldPosition: [-6.0420, -0.2134, -24.2361],
     hotspots: [
       { targetId: "camLandscape01", position: [6.0, 0.0, -0.0], label: "Landscape 01" },
       { targetId: "landscape", position: [4.03, 0.0, -4.45], label: "Landscape" },
@@ -247,6 +270,7 @@ const TOUR_DATA = {
     name: "Ceo Desk 01",
     panorama: "/panoramas/cam_ceo_desk_01.jpg",
     isNamed: false,
+    worldPosition: [7.7285, 0.6062, -23.0437],
     hotspots: [
       { targetId: "meetingTable", position: [5.37, 0.04, -2.67], label: "Meeting Table" },
       { targetId: "ceoDesk", position: [0.49, 0.02, -5.98], label: "CEO Desk" },
@@ -257,6 +281,7 @@ const TOUR_DATA = {
     name: "Passage 04",
     panorama: "/panoramas/cam_passage_04.jpg",
     isNamed: false,
+    worldPosition: [7.5664, -0.0258, 16.7673],
     hotspots: [
       { targetId: "camOutWaterSeating06", position: [5.98, -0.0, 0.45], label: "Out Water Seating 06" },
       { targetId: "camPassage05", position: [6.0, 0.0, -0.0], label: "Passage 05" },
@@ -267,6 +292,7 @@ const TOUR_DATA = {
     name: "Passage 03",
     panorama: "/panoramas/cam_passage_03.jpg",
     isNamed: false,
+    worldPosition: [7.5664, -0.0258, 9.9685],
     hotspots: [
       { targetId: "camPassage01", position: [-6.0, 0.0, 0.0], label: "Passage 01" },
       { targetId: "camPassage02", position: [-6.0, 0.0, 0.0], label: "Passage 02" },
@@ -277,6 +303,7 @@ const TOUR_DATA = {
     name: "Ceo Office Entry 01",
     panorama: "/panoramas/cam_ceo_office_entry_01.jpg",
     isNamed: false,
+    worldPosition: [0.0381, -0.1304, -15.7427],
     hotspots: [
       { targetId: "landscape", position: [-5.39, -0.08, 2.64], label: "Landscape" },
       { targetId: "camCeoOfficeEntry02", position: [-0.5, -0.19, 5.98], label: "Ceo Office Entry 02" },
@@ -287,6 +314,7 @@ const TOUR_DATA = {
     name: "Garden Area 03",
     panorama: "/panoramas/cam_garden_area_03.jpg",
     isNamed: false,
+    worldPosition: [-11.9961, -0.2134, 4.9954],
     hotspots: [
       { targetId: "camGardenArea05", position: [5.36, 0.0, -2.7], label: "Garden Area 05" },
       { targetId: "camGardenArea04", position: [2.36, 0.0, -5.52], label: "Garden Area 04" },
@@ -297,6 +325,7 @@ const TOUR_DATA = {
     name: "Garden Area 01",
     panorama: "/panoramas/cam_garden_area_01.jpg",
     isNamed: false,
+    worldPosition: [-7.1084, -0.2134, 0.4158],
     hotspots: [
       { targetId: "camGardenArea04", position: [5.99, 0.0, 0.35], label: "Garden Area 04" },
       { targetId: "camGardenArea02", position: [0.21, 0.0, 6.0], label: "Garden Area 02" },
@@ -307,6 +336,7 @@ const TOUR_DATA = {
     name: "Sunken Seating 01",
     panorama: "/panoramas/cam_sunken_seating_01.jpg",
     isNamed: false,
+    worldPosition: [12.0010, 0.6022, -15.5161],
     hotspots: [
       { targetId: "swimmingPool", position: [6.0, -0.11, -0.0], label: "Swimming Pool" },
       { targetId: "camSwimmingPool01", position: [5.94, 0.88, -0.0], label: "Swimming Pool 01" },
@@ -318,6 +348,7 @@ const TOUR_DATA = {
     name: "Garden Area 08",
     panorama: "/panoramas/cam_garden_area_08.jpg",
     isNamed: false,
+    worldPosition: [-8.3750, -0.2134, 19.5322],
     hotspots: [
       { targetId: "camGardenArea10", position: [6.0, 0.18, -0.0], label: "Garden Area 10" },
       { targetId: "camGardenArea07", position: [-6.0, 0.17, 0.16], label: "Garden Area 07" },
@@ -328,6 +359,7 @@ const TOUR_DATA = {
     name: "Ceo Office Entry 02",
     panorama: "/panoramas/cam_ceo_office_entry_02.jpg",
     isNamed: false,
+    worldPosition: [-2.5898, -0.2134, -15.9604],
     hotspots: [
       { targetId: "landscape", position: [-6.0, 0.0, 0.0], label: "Landscape" },
       { targetId: "camCeoOfficeEntry01", position: [0.5, 0.19, -5.98], label: "Ceo Office Entry 01" },
@@ -339,6 +371,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/side_wall_entry.jpg",
     isNamed: true,
     order: 7,
+    worldPosition: [-8.1387, -0.1635, -15.0852],
     hotspots: [
       { targetId: "camCeoOfficeEntry04", position: [-3.48, -0.12, -4.88], label: "Ceo Office Entry 04" },
       { targetId: "camSideWallEntry02", position: [6.0, -0.06, 0.11], label: "Side Wall Entry 02" },
@@ -349,6 +382,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 05",
     panorama: "/panoramas/cam_out_water_seating_05.jpg",
     isNamed: false,
+    worldPosition: [6.7695, -0.0334, 31.4644],
     hotspots: [
       { targetId: "camOutWaterSeating04", position: [4.07, 0.0, 4.41], label: "Out Water Seating 04" },
       { targetId: "camOutWaterSeating06", position: [-6.0, 0.0, 0.01], label: "Out Water Seating 06" },
@@ -359,6 +393,7 @@ const TOUR_DATA = {
     name: "Garden Area 05",
     panorama: "/panoramas/cam_garden_area_05.jpg",
     isNamed: false,
+    worldPosition: [-9.6338, -0.2134, 9.6934],
     hotspots: [
       { targetId: "camGardenArea06", position: [5.59, 0.0, -2.18], label: "Garden Area 06" },
       { targetId: "camGardenArea03", position: [-5.36, 0.0, 2.7], label: "Garden Area 03" },
@@ -369,6 +404,7 @@ const TOUR_DATA = {
     name: "Ceo Office Entry 04",
     panorama: "/panoramas/cam_ceo_office_entry_04.jpg",
     isNamed: false,
+    worldPosition: [-6.1602, -0.2134, -16.4973],
     hotspots: [
       { targetId: "camLandscape01", position: [-6.0, 0.0, -0.15], label: "Landscape 01" },
       { targetId: "camCeoOfficeEntry02", position: [0.89, 0.0, -5.93], label: "Ceo Office Entry 02" },
@@ -380,6 +416,7 @@ const TOUR_DATA = {
     name: "Garden Area 04",
     panorama: "/panoramas/cam_garden_area_04.jpg",
     isNamed: false,
+    worldPosition: [-7.4902, -0.2134, 6.9260],
     hotspots: [
       { targetId: "camGardenArea06", position: [5.94, 0.0, 0.88], label: "Garden Area 06" },
       { targetId: "camGardenArea03", position: [-2.36, 0.0, 5.52], label: "Garden Area 03" },
@@ -391,6 +428,7 @@ const TOUR_DATA = {
     name: "Landscape Stairs 02",
     panorama: "/panoramas/cam_landscape_stairs_02.jpg",
     isNamed: false,
+    worldPosition: [-2.5898, -0.2134, -24.6692],
     hotspots: [
       { targetId: "landscape", position: [6.0, 0.0, -0.0], label: "Landscape" },
       { targetId: "landscapeStairs", position: [-0.0, 0.77, -5.95], label: "Landscape Stairs" },
@@ -402,6 +440,7 @@ const TOUR_DATA = {
     name: "Side Wall Entry 02",
     panorama: "/panoramas/cam_side_wall_entry_02.jpg",
     isNamed: false,
+    worldPosition: [-8.2412, -0.2134, -9.6580],
     hotspots: [
       { targetId: "sideWallEntry", position: [-6.0, 0.06, -0.11], label: "Side Wall Entry" },
       { targetId: "gardenArea", position: [6.0, 0.0, -0.0], label: "Garden Area" },
@@ -412,6 +451,7 @@ const TOUR_DATA = {
     name: "Garden Area 02",
     panorama: "/panoramas/cam_garden_area_02.jpg",
     isNamed: false,
+    worldPosition: [-12.0303, -0.2134, 0.5879],
     hotspots: [
       { targetId: "camGardenArea03", position: [6.0, 0.0, -0.05], label: "Garden Area 03" },
       { targetId: "camGardenArea01", position: [-0.21, 0.0, -6.0], label: "Garden Area 01" },
@@ -422,6 +462,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 02",
     panorama: "/panoramas/cam_out_water_seating_02.jpg",
     isNamed: false,
+    worldPosition: [-2.0889, -0.0334, 30.7837],
     hotspots: [
       { targetId: "camOutWaterSeating04", position: [3.63, 0.0, -4.78], label: "Out Water Seating 04" },
       { targetId: "camOutWaterSeating03", position: [-2.26, 0.0, 5.56], label: "Out Water Seating 03" },
@@ -434,6 +475,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/out_water_seating.jpg",
     isNamed: true,
     order: 8,
+    worldPosition: [-9.4229, -0.0334, 32.0974],
     hotspots: [
       { targetId: "camGardenArea10", position: [-5.92, 0.0, -0.95], label: "Garden Area 10" },
       { targetId: "camOutWaterSeating03", position: [-5.22, 0.0, -2.95], label: "Out Water Seating 03" },
@@ -444,6 +486,7 @@ const TOUR_DATA = {
     name: "Swimming Pool 01",
     panorama: "/panoramas/cam_swimming_pool_01.jpg",
     isNamed: false,
+    worldPosition: [12.0010, 1.3093, -10.7354],
     hotspots: [
       { targetId: "penthouse", position: [3.76, -1.29, 4.5], label: "Penthouse" },
       { targetId: "passage", position: [-1.96, -0.9, 5.6], label: "Passage" },
@@ -457,6 +500,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/garden_area.jpg",
     isNamed: true,
     order: 9,
+    worldPosition: [-8.2412, -0.2134, -4.4270],
     hotspots: [
       { targetId: "camGardenArea01", position: [5.84, 0.0, -1.37], label: "Garden Area 01" },
       { targetId: "camSideWallEntry02", position: [-6.0, 0.0, 0.0], label: "Side Wall Entry 02" },
@@ -468,6 +512,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/sunken_seating.jpg",
     isNamed: true,
     order: 10,
+    worldPosition: [12.4082, 0.0262, -19.0356],
     hotspots: [
       { targetId: "meetingTable", position: [-0.57, 1.25, 5.84], label: "Meeting Table" },
       { targetId: "ceoDesk", position: [-5.44, 0.85, 2.39], label: "CEO Desk" },
@@ -479,6 +524,7 @@ const TOUR_DATA = {
     name: "Meeting Table 01",
     panorama: "/panoramas/cam_meeting_table_01.jpg",
     isNamed: false,
+    worldPosition: [9.5322, 0.6457, -16.5923],
     hotspots: [
       { targetId: "passage", position: [5.46, -0.06, 2.49], label: "Passage" },
       { targetId: "swimmingPool", position: [4.92, -0.12, -3.44], label: "Swimming Pool" },
@@ -492,6 +538,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 7",
     panorama: "/panoramas/cam_out_water_seating_7.jpg",
     isNamed: false,
+    worldPosition: [2.6035, -0.0334, 27.4529],
     hotspots: [
       { targetId: "camOutWaterSeating04", position: [5.98, 0.0, -0.47], label: "Out Water Seating 04" },
       { targetId: "camOutWaterSeating06", position: [-0.0, 0.0, -6.0], label: "Out Water Seating 06" },
@@ -504,6 +551,7 @@ const TOUR_DATA = {
     name: "Ceo Office Entry 03",
     panorama: "/panoramas/cam_ceo_office_entry_03.jpg",
     isNamed: false,
+    worldPosition: [7.1006, 0.6090, -15.7793],
     hotspots: [
       { targetId: "passage", position: [5.95, -0.02, -0.79], label: "Passage" },
       { targetId: "camMeetingTable01", position: [-1.9, 0.09, -5.69], label: "Meeting Table 01" },
@@ -514,6 +562,7 @@ const TOUR_DATA = {
     name: "Out Water Seating 01",
     panorama: "/panoramas/cam_out_water_seating_01.jpg",
     isNamed: false,
+    worldPosition: [-5.4922, -0.0334, 32.1641],
     hotspots: [
       { targetId: "camOutWaterSeating03", position: [-5.26, 0.0, 2.89], label: "Out Water Seating 03" },
       { targetId: "camOutWaterSeating02", position: [-2.26, 0.0, -5.56], label: "Out Water Seating 02" },
@@ -524,6 +573,7 @@ const TOUR_DATA = {
     name: "Garden Area 09",
     panorama: "/panoramas/cam_garden_area_09.jpg",
     isNamed: false,
+    worldPosition: [-8.3750, -0.2134, 22.6833],
     hotspots: [
       { targetId: "camGardenArea10", position: [5.99, 0.37, -0.0], label: "Garden Area 10" },
       { targetId: "camGardenArea07", position: [-6.0, 0.09, 0.08], label: "Garden Area 07" },
@@ -536,6 +586,7 @@ const TOUR_DATA = {
     panorama: "/panoramas/ceo_office_entry.jpg",
     isNamed: true,
     order: 11,
+    worldPosition: [3.5156, -0.1180, -15.6296],
     hotspots: [
       { targetId: "passage", position: [3.78, 0.81, -4.59], label: "Passage" },
       { targetId: "camCeoOfficeEntry01", position: [-0.19, -0.02, 6.0], label: "Ceo Office Entry 01" },
@@ -546,6 +597,7 @@ const TOUR_DATA = {
     name: "Landscape Stairs 01",
     panorama: "/panoramas/cam_landscape_stairs_01.jpg",
     isNamed: false,
+    worldPosition: [0.4775, -0.2134, -24.8169],
     hotspots: [
       { targetId: "landscape", position: [4.62, 0.0, 3.82], label: "Landscape" },
       { targetId: "landscapeStairs", position: [0.28, 1.52, -5.8], label: "Landscape Stairs" },
@@ -556,14 +608,14 @@ const TOUR_DATA = {
     name: "Side Wall Entry 01",
     panorama: "/panoramas/cam_side_wall_entry_01.jpg",
     isNamed: false,
+    worldPosition: [-10.7080, -0.2134, -13.5811],
     hotspots: [
       { targetId: "sideWallEntry", position: [-3.03, 0.1, -5.18], label: "Side Wall Entry" },
       { targetId: "camCeoOfficeEntry04", position: [-3.24, 0.0, -5.05], label: "Ceo Office Entry 04" },
       { targetId: "camSideWallEntry02", position: [5.08, 0.0, -3.19], label: "Side Wall Entry 02" }
     ],
   },
-};
-const ORDERED_NAMED_IDS = Object.keys(TOUR_DATA)
+};const ORDERED_NAMED_IDS = Object.keys(TOUR_DATA)
   .filter((id) => TOUR_DATA[id].isNamed)
   .sort((a, b) => TOUR_DATA[a].order - TOUR_DATA[b].order);
 
@@ -617,29 +669,104 @@ function PanoramaSphere({ imageUrl, opacity }) {
   );
 }
 
-// ---- IN-SCENE FLOOR-DOT HOTSPOT ----------------------------------------
+// ---- MESH VIEW ("Show Mesh" toggle) ------------------------------------
+// Loads your real GLB, strips all 63 materials down to one flat gray
+// unlit-ish material (matching the reference tool's look), and positions
+// the whole mesh relative to the CURRENT viewpoint's real world position —
+// so standing in "Passage" shows the mesh exactly as it would look from
+// that real camera spot, lined up with the photo.
+const FLAT_MESH_MATERIAL = new THREE.MeshStandardMaterial({
+  color: "#8a8a8a",
+  roughness: 1,
+  metalness: 0,
+});
+
+// If the mesh view looks rotated relative to the matching photo, adjust
+// this value in 90-degree steps (try 90, -90, or 180) until it lines up.
+
+
+// ---- MESH VIEW ("Show Mesh" toggle) ------------------------------------
+
+
+
+function MeshDollhouseView({ worldPosition }) {
+  const { scene } = useGLTF("/models/Penthouse_Mesh.glb");
+
+  const flatScene = useMemo(() => {
+    const cloned = scene.clone(true);
+
+    cloned.traverse((child) => {
+      if (child.isMesh) {
+        child.material = FLAT_MESH_MATERIAL;
+      }
+    });
+
+    return cloned;
+  }, [scene]);
+
+  return (
+    <group
+      position={[
+        -worldPosition[0],
+        -worldPosition[1],
+        -worldPosition[2],
+      ]}
+    >
+      <primitive object={flatScene} />
+    </group>
+  );
+}
+// ---- HOTSPOT -----------------------------------------------------------
+
+// ---- HOTSPOT -----------------------------------------------------------
+
 function Hotspot({ position, label, onClick }) {
   const [hovered, setHovered] = useState(false);
 
+  const handleClick = (e) => {
+    e.stopPropagation(); // don't let the click also count as an orbit-drag
+    onClick();
+  };
+
   return (
     <group position={position}>
+      {/* invisible larger sphere = generous click/touch target */}
       <mesh
-        onClick={onClick}
+        onClick={handleClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        <ringGeometry args={[0.3, 0.5, 32]} />
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
+      {/* visible ring — faces the camera regardless of look direction */}
+      <mesh renderOrder={1}>
+        <ringGeometry args={[0.22, 0.32, 32]} />
         <meshBasicMaterial
           color={hovered ? "#ffffff" : "#4da3ff"}
           transparent
-          opacity={0.9}
+          opacity={0.95}
           side={THREE.DoubleSide}
+          depthTest={false}
         />
       </mesh>
-      <mesh>
-        <circleGeometry args={[0.12, 24]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
+      {/* soft outer glow so it stands out against busy real-photo backgrounds */}
+      <mesh renderOrder={0}>
+        <ringGeometry args={[0.32, 0.55, 32]} />
+        <meshBasicMaterial
+          color={hovered ? "#ffffff" : "#4da3ff"}
+          transparent
+          opacity={0.25}
+          side={THREE.DoubleSide}
+          depthTest={false}
+        />
       </mesh>
+      <mesh renderOrder={1}>
+        <circleGeometry args={[0.1, 24]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={1} depthTest={false} />
+      </mesh>
+
       {hovered && (
         <Html center distanceFactor={10} position={[0, 0.6, 0]}>
           <div style={pillStyle}>{label}</div>
@@ -741,6 +868,7 @@ export default function VirtualTour() {
   const [currentId, setCurrentId] = useState(ORDERED_NAMED_IDS[0]);
   const [nextId, setNextId] = useState(null);
   const [fade, setFade] = useState(1); // crossfade progress
+  const [showMesh, setShowMesh] = useState(false);
   const fadingRef = useRef(false);
 
   const current = TOUR_DATA[currentId];
@@ -773,17 +901,29 @@ export default function VirtualTour() {
       <div style={{ width: "100%", height: "100vh", position: "relative", background: "#111" }}>
         <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }} style={{ cursor: "none" }}>
           <Suspense fallback={<Html center style={{ color: "#fff" }}>Loading panorama…</Html>}>
-            {/* current panorama, fading out */}
-            <PanoramaSphere imageUrl={current.panorama} opacity={fade} />
+            {showMesh ? (
+              <>
+                {/* flat gray mesh, positioned for the CURRENT viewpoint */}
+                <ambientLight intensity={0.9} />
+                <directionalLight position={[5, 10, 5]} intensity={1.2} />
+                <MeshDollhouseView worldPosition={current.worldPosition} />
+              </>
+            ) : (
+              <>
+                {/* current panorama, fading out */}
+                <PanoramaSphere imageUrl={current.panorama} opacity={fade} />
 
-            {/* next panorama, fading in, only while transitioning */}
-            {nextId && (
-              <PanoramaSphere
-                imageUrl={TOUR_DATA[nextId].panorama}
-                opacity={1 - fade}
-              />
+                {/* next panorama, fading in, only while transitioning */}
+                {nextId && (
+                  <PanoramaSphere
+                    imageUrl={TOUR_DATA[nextId].panorama}
+                    opacity={1 - fade}
+                  />
+                )}
+              </>
             )}
 
+            {/* hotspots stay visible in both modes, same real positions */}
             {current.hotspots.map((h) => (
               <Hotspot
                 key={h.targetId}
@@ -805,6 +945,13 @@ export default function VirtualTour() {
         <DragCursor />
 
         <div style={hudStyle}>{current.name}</div>
+
+        <button
+          style={meshToggleButtonStyle}
+          onClick={() => setShowMesh((v) => !v)}
+        >
+          {showMesh ? "Hide Mesh" : "Show Mesh"}
+        </button>
 
         <HotspotBar currentId={currentId} onSelect={teleportTo} />
       </div>
@@ -835,6 +982,22 @@ const errorScreenStyle = {
   fontFamily: "sans-serif",
   gap: 8,
   padding: 20,
+};
+
+const meshToggleButtonStyle = {
+  position: "absolute",
+  top: 20,
+  right: 20,
+  zIndex: 10,
+  background: "#3b6fe0",
+  color: "#fff",
+  border: "none",
+  padding: "10px 18px",
+  borderRadius: 10,
+  fontFamily: "sans-serif",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
 };
 
 const hudStyle = {
