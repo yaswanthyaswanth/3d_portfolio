@@ -681,6 +681,40 @@ const FLAT_MESH_MATERIAL = new THREE.MeshStandardMaterial({
   metalness: 0,
 });
 
+const INVISIBLE_MESH_MATERIAL = new THREE.MeshBasicMaterial({
+  transparent: true,
+  opacity: 0,
+  depthWrite: false,
+});
+
+// ---- SURFACE CURSOR (3D Ring + Dot) ------------------------------------
+function SurfaceCursor({ position, normal }) {
+  const cursorRef = useRef();
+
+  useEffect(() => {
+    if (cursorRef.current && position && normal) {
+      cursorRef.current.lookAt(position.clone().add(normal));
+    }
+  }, [position, normal]);
+
+  if (!position) return null;
+
+  return (
+    <group ref={cursorRef} position={position} renderOrder={999}>
+      {/* Outer Ring */}
+      <mesh>
+        <ringGeometry args={[0.2, 0.22, 32]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.6} depthTest={false} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Inner Dot/Ring */}
+      <mesh>
+        <ringGeometry args={[0.04, 0.08, 16]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthTest={false} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
 // If the mesh view looks rotated relative to the matching photo, adjust
 // this value in 90-degree steps (try 90, -90, or 180) until it lines up.
 
@@ -689,33 +723,55 @@ const FLAT_MESH_MATERIAL = new THREE.MeshStandardMaterial({
 
 
 
-function MeshDollhouseView({ worldPosition }) {
+function MeshDollhouseView({ worldPosition, showMesh }) {
   const { scene } = useGLTF("/models/Penthouse_Mesh.glb");
+  const [cursorPos, setCursorPos] = useState(null);
+  const [cursorNormal, setCursorNormal] = useState(null);
 
-  const flatScene = useMemo(() => {
+  const activeScene = useMemo(() => {
     const cloned = scene.clone(true);
+    const material = showMesh ? FLAT_MESH_MATERIAL : INVISIBLE_MESH_MATERIAL;
 
     cloned.traverse((child) => {
       if (child.isMesh) {
-        child.material = FLAT_MESH_MATERIAL;
+        child.material = material;
       }
     });
 
     return cloned;
-  }, [scene]);
+  }, [scene, showMesh]);
 
   return (
-    <group rotation={[0, (-180 * Math.PI) / 180, 0]}>
-      <group
-        position={[
-          -worldPosition[0],
-          -worldPosition[1],
-          -worldPosition[2],
-        ]}
-      >
-        <primitive object={flatScene} />
+    <>
+      <group rotation={[0, (-180 * Math.PI) / 180, 0]}>
+        <group
+          position={[
+            -worldPosition[0],
+            -worldPosition[1],
+            -worldPosition[2],
+          ]}
+          onPointerMove={(e) => {
+            if (e.intersections.length > 0) {
+              const hit = e.intersections[0];
+              setCursorPos(hit.point);
+              
+              // Convert local face normal to world space normal
+              const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
+              const worldNormal = hit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+              setCursorNormal(worldNormal);
+            }
+          }}
+          onPointerOut={() => {
+            setCursorPos(null);
+            setCursorNormal(null);
+          }}
+        >
+          <primitive object={activeScene} />
+        </group>
       </group>
-    </group>
+
+      <SurfaceCursor position={cursorPos} normal={cursorNormal} />
+    </>
   );
 }
 // ---- HOTSPOT -----------------------------------------------------------
@@ -778,43 +834,8 @@ function Hotspot({ position, label, onClick }) {
   );
 }
 
-// ---- CUSTOM LOOK-AROUND CURSOR -----------------------------------------
-// Purely visual — listens on `window` passively so it never blocks
-// drag events meant for OrbitControls underneath it.
-function DragCursor() {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
+// Custom 2D DragCursor removed in favor of 3D SurfaceCursor
 
-  useEffect(() => {
-    const handleMove = (e) => setPos({ x: e.clientX, y: e.clientY });
-    const handleDown = () => setDragging(true);
-    const handleUp = () => setDragging(false);
-
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mousedown", handleDown);
-    window.addEventListener("mouseup", handleUp);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mousedown", handleDown);
-      window.removeEventListener("mouseup", handleUp);
-    };
-  }, []);
-
-  return (
-    <div style={cursorLayerStyle}>
-      <div
-        style={{
-          ...cursorRingStyle,
-          left: pos.x,
-          top: pos.y,
-          transform: `translate(-50%, -50%) scale(${dragging ? 0.7 : 1})`,
-          background: dragging ? "rgba(255,255,255,0.25)" : "transparent",
-        }}
-      />
-    </div>
-  );
-}
 
 // ---- BOTTOM HOTSPOT BAR (named rooms only) -----------------------------
 function HotspotBar({ currentId, onSelect }) {
@@ -903,14 +924,12 @@ export default function VirtualTour() {
       <div style={{ width: "100%", height: "100vh", position: "relative", background: "#111" }}>
         <Canvas camera={{ position: [0, 0, 0.1], fov: 75 }} style={{ cursor: "none" }}>
           <Suspense fallback={<Html center style={{ color: "#fff" }}>Loading panorama…</Html>}>
-            {showMesh ? (
-              <>
-                {/* flat gray mesh, positioned for the CURRENT viewpoint */}
-                <ambientLight intensity={0.9} />
-                <directionalLight position={[5, 10, 5]} intensity={1.2} />
-                <MeshDollhouseView worldPosition={current.worldPosition} />
-              </>
-            ) : (
+            {/* Always render mesh for raycasting, toggle visibility inside via showMesh prop */}
+            <ambientLight intensity={0.9} />
+            <directionalLight position={[5, 10, 5]} intensity={1.2} />
+            <MeshDollhouseView worldPosition={current.worldPosition} showMesh={showMesh} />
+
+            {!showMesh && (
               <>
                 {/* current panorama, fading out */}
                 <PanoramaSphere imageUrl={current.panorama} opacity={fade} />
@@ -943,8 +962,6 @@ export default function VirtualTour() {
             />
           </Suspense>
         </Canvas>
-
-        <DragCursor />
 
         <div style={hudStyle}>{current.name}</div>
 
@@ -1013,24 +1030,6 @@ const hudStyle = {
   fontFamily: "sans-serif",
   fontSize: 14,
   pointerEvents: "none",
-};
-
-const cursorLayerStyle = {
-  position: "absolute",
-  inset: 0,
-  zIndex: 5,
-  cursor: "none",
-  pointerEvents: "none",
-};
-
-const cursorRingStyle = {
-  position: "fixed",
-  width: 46,
-  height: 46,
-  borderRadius: "50%",
-  border: "2px solid rgba(255,255,255,0.8)",
-  pointerEvents: "none",
-  transition: "transform 0.1s ease, background 0.15s ease",
 };
 
 const hotspotBarWrapperStyle = {
