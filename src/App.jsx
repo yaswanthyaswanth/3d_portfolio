@@ -10,6 +10,7 @@ import {
   Tech,
   Works,
   StarsCanvas,
+  Preloader,
 } from "./components";
 
 import VirtualTour from "./components/VirtualTour";
@@ -18,6 +19,7 @@ import MappingCheck from "./components/MappingCheck";
 
 const Home = () => (
   <div className="relative z-0 bg-primary">
+    <Preloader />
     <div className="bg-hero-pattern bg-cover bg-no-repeat bg-center">
       <Navbar />
       <Hero />
