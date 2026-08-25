@@ -44,7 +44,7 @@ const App = () => {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
-        
+
         {/* Main Tour Selection Screen */}
         <Route path="/tour" element={<TourSelection />} />
 
@@ -59,8 +59,8 @@ const App = () => {
 
         <Route path="/tour/office" element={
           <VirtualTour
-            cameraGltf="/models/ClassicOffice/706_office_Camera.gltf"
-            meshGlb="/models/ClassicOffice/706_office_Mesh.glb"
+            cameraGltf="/models/ClassicOffice/805_D_Camera.gltf"
+            meshGlb="/models/ClassicOffice/805_D_Mesh.glb"
             panoramasFolder="/panoramas/ClassicOffice"
           />
         } />

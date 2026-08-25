@@ -14,18 +14,18 @@ const TourCard = ({ title, description, link, index }) => {
       className="cursor-pointer"
       onClick={() => navigate(link)}
     >
-      <div 
+      <div
         className="w-full p-[1px] rounded-[20px] shadow-card"
         style={{ background: "linear-gradient(144deg, #915EFF, #3b6fe0)" }}
       >
         <div className="bg-tertiary rounded-[20px] py-10 px-12 min-h-[280px] flex justify-center items-center flex-col 
                         transition-all duration-300 hover:bg-black-100 hover:scale-[1.02]">
-          
+
           <div className="w-16 h-16 rounded-full bg-[#915EFF] flex items-center justify-center mb-6 shadow-lg">
-            <svg 
-              className="w-8 h-8 text-white" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -33,7 +33,7 @@ const TourCard = ({ title, description, link, index }) => {
           </div>
 
           <h3 className="text-white text-[24px] font-bold text-center mb-4">{title}</h3>
-          
+
           <p className="text-secondary text-[14px] text-center leading-[22px]">
             {description}
           </p>
@@ -65,8 +65,8 @@ const TourSelection = () => {
   return (
     <div className="relative z-0 bg-primary min-h-screen flex items-center justify-center p-6 sm:p-12">
       <div className="max-w-7xl mx-auto flex flex-col items-center">
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
