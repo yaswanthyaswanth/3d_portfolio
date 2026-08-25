@@ -962,6 +962,15 @@ function DynamicHotspots({ currentId, onTeleport }) {
 // ---- BOTTOM HOTSPOT BAR (named rooms only) -----------------------------
 function HotspotBar({ currentId, onSelect }) {
   const [scrollIndex, setScrollIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const visibleCount = isMobile ? 2 : 4;
   
   // Auto-scroll to show current room if it's named and clicked via 3D floor dots
   useEffect(() => {
@@ -969,21 +978,22 @@ function HotspotBar({ currentId, onSelect }) {
     if (currentIndex !== -1) {
       if (currentIndex < scrollIndex) {
         setScrollIndex(currentIndex);
-      } else if (currentIndex > scrollIndex + 1) {
-        setScrollIndex(currentIndex - 1);
+      } else if (currentIndex > scrollIndex + (visibleCount - 1)) {
+        setScrollIndex(currentIndex - (visibleCount - 1));
       }
     }
-  }, [currentId]); 
+  }, [currentId, visibleCount]); 
 
   const goPrev = () => {
     setScrollIndex(v => Math.max(0, v - 1));
   };
 
   const goNext = () => {
-    setScrollIndex(v => Math.min(ORDERED_NAMED_IDS.length - 4, v + 1));
+    setScrollIndex(v => Math.min(ORDERED_NAMED_IDS.length - visibleCount, v + 1));
   };
 
-  const visibleIds = ORDERED_NAMED_IDS.slice(scrollIndex, scrollIndex + 4);
+  const visibleIds = ORDERED_NAMED_IDS.slice(scrollIndex, scrollIndex + visibleCount);
+  const tabWidth = isMobile ? 110 : 140;
 
   return (
     <div style={hotspotBarWrapperStyle}>
@@ -1006,7 +1016,9 @@ function HotspotBar({ currentId, onSelect }) {
               style={{
                 ...hotspotTabStyle,
                 ...(isActive ? hotspotTabActiveStyle : {}),
-                width: 140, // consistent width
+                width: tabWidth, // responsive width
+                fontSize: isMobile ? 12 : 14,
+                padding: isMobile ? "8px 12px" : "10px 18px",
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
               }}
@@ -1018,9 +1030,9 @@ function HotspotBar({ currentId, onSelect }) {
       </div>
 
       <button 
-        style={{...arrowButtonStyle, opacity: scrollIndex >= ORDERED_NAMED_IDS.length - 4 ? 0.3 : 1}} 
+        style={{...arrowButtonStyle, opacity: scrollIndex >= ORDERED_NAMED_IDS.length - visibleCount ? 0.3 : 1}} 
         onClick={goNext} 
-        disabled={scrollIndex >= ORDERED_NAMED_IDS.length - 4}
+        disabled={scrollIndex >= ORDERED_NAMED_IDS.length - visibleCount}
         aria-label="Scroll right"
       >
         ›
@@ -1036,7 +1048,30 @@ export default function VirtualTour() {
   const [pendingNextId, setPendingNextId] = useState(null);
   const [fade, setFade] = useState(1); // crossfade progress
   const [showMesh, setShowMesh] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [hasStartedMobile, setHasStartedMobile] = useState(false);
   const fadingRef = useRef(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleMobileStart = () => {
+    setHasStartedMobile(true);
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      element.requestFullscreen().then(() => {
+        if (window.screen.orientation && window.screen.orientation.lock) {
+          window.screen.orientation.lock('landscape').catch(e => console.log("Orientation lock failed:", e));
+        }
+      }).catch(e => console.log("Fullscreen request failed:", e));
+    }
+  };
 
   const current = TOUR_DATA[currentId];
 
@@ -1068,6 +1103,21 @@ export default function VirtualTour() {
     };
     requestAnimationFrame(step);
   };
+
+  if (isMobile && !hasStartedMobile) {
+    return (
+      <div style={{ width: "100%", height: "100vh", background: "#111", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 20 }}>
+        <h2 style={{ fontSize: 28, marginBottom: 15 }}>3D Walkthrough</h2>
+        <p style={{ marginBottom: 40, color: "#aaa", maxWidth: 300 }}>For the best interactive experience, this tour requires fullscreen landscape mode.</p>
+        <button 
+          onClick={handleMobileStart} 
+          style={{ padding: "16px 32px", fontSize: 18, fontWeight: "bold", background: "#3b6fe0", color: "#fff", border: "none", borderRadius: 12, cursor: "pointer", boxShadow: "0 4px 15px rgba(59, 111, 224, 0.4)" }}
+        >
+          Enter VR Tour
+        </button>
+      </div>
+    );
+  }
 
   return (
     <TourErrorBoundary>
