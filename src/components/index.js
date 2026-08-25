@@ -9,7 +9,7 @@ import Feedbacks from "./Feedbacks";
 import Contact from "./Contact";
 import CanvasLoader from "./Loader";
 import Preloader from "./Preloader";
-
+import TourSelection from "./TourSelection";
 
 export {
   Hero,
@@ -25,5 +25,6 @@ export {
   BallCanvas, 
   ComputersCanvas, 
   StarsCanvas,
-  Preloader
+  Preloader,
+  TourSelection
 };

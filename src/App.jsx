@@ -11,6 +11,7 @@ import {
   Works,
   StarsCanvas,
   Preloader,
+  TourSelection,
 } from "./components";
 
 import VirtualTour from "./components/VirtualTour";
@@ -43,7 +44,12 @@ const App = () => {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/tour" element={
+        
+        {/* Main Tour Selection Screen */}
+        <Route path="/tour" element={<TourSelection />} />
+
+        {/* Individual Tours */}
+        <Route path="/tour/penthouse" element={
           <VirtualTour
             cameraGltf="/models/Penthouse/Penthouse Cameras.gltf"
             meshGlb="/models/Penthouse/Penthouse_Mesh.glb"
@@ -51,11 +57,7 @@ const App = () => {
           />
         } />
 
-        {/* ✨ HOW TO ADD A SECOND TOUR ✨ */}
-        {/* 1. Put your new files in the public folder. */}
-        {/* 2. Uncomment the block below and change the filenames to match yours! */}
-
-        <Route path="/tour2" element={
+        <Route path="/tour/office" element={
           <VirtualTour
             cameraGltf="/models/ClassicOffice/706_office_Camera.gltf"
             meshGlb="/models/ClassicOffice/706_office_Mesh.glb"
