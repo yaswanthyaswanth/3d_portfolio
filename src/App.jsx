@@ -45,9 +45,9 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/tour" element={
           <VirtualTour 
-            cameraGltf="/models/Penthouse Cameras.gltf" 
-            meshGlb="/models/Penthouse_Mesh.glb" 
-            panoramasFolder="/panoramas" 
+            cameraGltf="/models/Penthouse/Penthouse Cameras.gltf" 
+            meshGlb="/models/Penthouse/Penthouse_Mesh.glb" 
+            panoramasFolder="/panoramas/Penthouse" 
           />
         } />
         
