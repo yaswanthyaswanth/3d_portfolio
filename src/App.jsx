@@ -44,22 +44,22 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/tour" element={
-          <VirtualTour 
-            cameraGltf="/models/Penthouse/Penthouse Cameras.gltf" 
-            meshGlb="/models/Penthouse/Penthouse_Mesh.glb" 
-            panoramasFolder="/panoramas/Penthouse" 
+          <VirtualTour
+            cameraGltf="/models/Penthouse/Penthouse Cameras.gltf"
+            meshGlb="/models/Penthouse/Penthouse_Mesh.glb"
+            panoramasFolder="/panoramas/Penthouse"
           />
         } />
-        
+
         {/* ✨ HOW TO ADD A SECOND TOUR ✨ */}
         {/* 1. Put your new files in the public folder. */}
         {/* 2. Uncomment the block below and change the filenames to match yours! */}
-        
+
         <Route path="/tour2" element={
-          <VirtualTour 
-            cameraGltf="/models/Project2_Cameras.gltf" 
-            meshGlb="/models/Project2_Mesh.glb" 
-            panoramasFolder="/panoramas_project2" 
+          <VirtualTour
+            cameraGltf="/models/ClassicOffice/706_office_Camera.gltf"
+            meshGlb="/models/ClassicOffice/706_office_Mesh.glb"
+            panoramasFolder="/panoramas/ClassicOffice"
           />
         } />
 
