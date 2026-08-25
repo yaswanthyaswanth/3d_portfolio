@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, Suspense, Component } from "react";
-import { Canvas, useLoader } from "@react-three/fiber";
+import { Canvas, useLoader, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -774,12 +774,16 @@ function MeshDollhouseView({ worldPosition, showMesh }) {
     </>
   );
 }
-// ---- HOTSPOT -----------------------------------------------------------
-
-// ---- HOTSPOT -----------------------------------------------------------
-
 function Hotspot({ position, label, onClick }) {
   const [hovered, setHovered] = useState(false);
+  const meshRef = useRef();
+
+  useFrame(({ clock }) => {
+    if (meshRef.current) {
+      const scale = 1 + Math.sin(clock.elapsedTime * 4) * 0.05;
+      meshRef.current.scale.set(scale, scale, scale);
+    }
+  });
 
   const handleClick = (e) => {
     e.stopPropagation(); // don't let the click also count as an orbit-drag
@@ -787,49 +791,93 @@ function Hotspot({ position, label, onClick }) {
   };
 
   return (
-    <group position={position}>
+    <group position={position} rotation={[-Math.PI / 2, 0, 0]}>
       {/* invisible larger sphere = generous click/touch target */}
       <mesh
         onClick={handleClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
       >
         <sphereGeometry args={[0.5, 16, 16]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* visible ring — faces the camera regardless of look direction */}
-      <mesh renderOrder={1}>
-        <ringGeometry args={[0.22, 0.32, 32]} />
-        <meshBasicMaterial
-          color={hovered ? "#ffffff" : "#4da3ff"}
-          transparent
-          opacity={0.95}
-          side={THREE.DoubleSide}
-          depthTest={false}
-        />
-      </mesh>
-      {/* soft outer glow so it stands out against busy real-photo backgrounds */}
-      <mesh renderOrder={0}>
-        <ringGeometry args={[0.32, 0.55, 32]} />
-        <meshBasicMaterial
-          color={hovered ? "#ffffff" : "#4da3ff"}
-          transparent
-          opacity={0.25}
-          side={THREE.DoubleSide}
-          depthTest={false}
-        />
-      </mesh>
-      <mesh renderOrder={1}>
-        <circleGeometry args={[0.1, 24]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={1} depthTest={false} />
-      </mesh>
+      <group ref={meshRef}>
+        {/* visible ring — flat on floor */}
+        <mesh renderOrder={1}>
+          <ringGeometry args={[0.3, 0.4, 32]} />
+          <meshBasicMaterial
+            color={hovered ? "#ffffff" : "#4da3ff"}
+            transparent
+            opacity={0.9}
+            side={THREE.DoubleSide}
+            depthTest={false}
+          />
+        </mesh>
+        {/* soft outer glow */}
+        <mesh renderOrder={0}>
+          <ringGeometry args={[0.4, 0.6, 32]} />
+          <meshBasicMaterial
+            color={hovered ? "#ffffff" : "#4da3ff"}
+            transparent
+            opacity={0.25}
+            side={THREE.DoubleSide}
+            depthTest={false}
+          />
+        </mesh>
+        <mesh renderOrder={1}>
+          <circleGeometry args={[0.15, 24]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.8} depthTest={false} />
+        </mesh>
+      </group>
 
       {hovered && (
-        <Html center distanceFactor={10} position={[0, 0.6, 0]}>
+        <Html center distanceFactor={10} position={[0, 0, -0.6]} rotation={[Math.PI / 2, 0, 0]}>
           <div style={pillStyle}>{label}</div>
         </Html>
       )}
+    </group>
+  );
+}
+
+// ---- DYNAMIC HOTSPOTS --------------------------------------------------
+function DynamicHotspots({ currentId, onTeleport }) {
+  const currentPos = TOUR_DATA[currentId].worldPosition;
+  
+  return (
+    <group rotation={[0, (-180 * Math.PI) / 180, 0]}>
+      <group
+        position={[
+          -currentPos[0],
+          -currentPos[1],
+          -currentPos[2],
+        ]}
+      >
+        {Object.entries(TOUR_DATA).map(([id, data]) => {
+          if (id === currentId) return null;
+          
+          const targetPos = data.worldPosition;
+          
+          // Calculate distance to current camera
+          const dx = targetPos[0] - currentPos[0];
+          const dy = targetPos[1] - currentPos[1];
+          const dz = targetPos[2] - currentPos[2];
+          const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          
+          // Only show hotspots for cameras within 8 meters
+          if (dist > 8) return null;
+          
+          return (
+            <Hotspot 
+              key={id} 
+              // Place hotspot at the exact GLTF world X/Z, but down 1.6m on the floor relative to current camera
+              position={[targetPos[0], currentPos[1] - 1.6, targetPos[2]]} 
+              label={data.name || id}
+              onClick={() => onTeleport(id)} 
+            />
+          );
+        })}
+      </group>
     </group>
   );
 }
@@ -944,15 +992,8 @@ export default function VirtualTour() {
               </>
             )}
 
-            {/* hotspots stay visible in both modes, same real positions */}
-            {current.hotspots.map((h) => (
-              <Hotspot
-                key={h.targetId}
-                position={h.position}
-                label={h.label}
-                onClick={() => teleportTo(h.targetId)}
-              />
-            ))}
+            {/* dynamic floor hotspots */}
+            <DynamicHotspots currentId={currentId} onTeleport={teleportTo} />
 
             {/* look-around only, no dolly/zoom-out of the sphere */}
             <OrbitControls
