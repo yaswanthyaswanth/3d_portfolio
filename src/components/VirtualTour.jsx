@@ -732,7 +732,7 @@ const arrowButtonStyle = {
 
 
 export default function VirtualTour({ 
-  cameraGltf = "/models/Penthouse_Cameras.gltf", 
+  cameraGltf = "/models/Penthouse Cameras.gltf", 
   meshGlb = "/models/Penthouse_Mesh.glb", 
   panoramasFolder = "/panoramas" 
 }) {
