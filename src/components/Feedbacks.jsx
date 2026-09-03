@@ -104,7 +104,7 @@ const Feedbacks = () => {
   const [sliderPositions, setSliderPositions] = useState(
     imageComparisons.map(() => 50)
   );
-  const [activeSection, setActiveSection] = useState("beforeAfter");
+  const [activeSection, setActiveSection] = useState("showcase1");
   const containerRefs = useRef([]);
 
   const handleSliderStart = (index, clientX, isTouch = false) => {
@@ -260,16 +260,6 @@ const Feedbacks = () => {
         </motion.div>
         <div className="mt-12 flex gap-8 flex-wrap justify-center">
           <button
-            onClick={() => setActiveSection("beforeAfter")}
-            className={`py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeSection === "beforeAfter"
-                ? "bg-tertiary text-white"
-                : "bg-black-200 text-secondary hover:bg-black-200/80"
-            }`}
-          >
-            Blender
-          </button>
-          <button
             onClick={() => setActiveSection("showcase1")}
             className={`py-2 px-4 rounded-lg font-medium transition-colors ${
               activeSection === "showcase1"
@@ -278,6 +268,16 @@ const Feedbacks = () => {
             }`}
           >
             Unreal
+          </button>
+          <button
+            onClick={() => setActiveSection("beforeAfter")}
+            className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+              activeSection === "beforeAfter"
+                ? "bg-tertiary text-white"
+                : "bg-black-200 text-secondary hover:bg-black-200/80"
+            }`}
+          >
+            Blender
           </button>
           <button
             onClick={() => setActiveSection("showcase2")}
