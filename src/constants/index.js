@@ -88,7 +88,7 @@ const experiences = [
     company_name: "PropVR, Bangalore",
     icon: propvr,
     iconBg: "#383E56",
-    date: "Feb 2026 - March 2027 - Present",
+    date: "Feb 2026 ---Present",
     points: [
       "Collaborated in a 15-19 member team to deliver high-quality architectural visualization projects from scratch.",
       "Developed 2 international projects based in Dubai and 1 domestic project, focusing on immersive environment design.",
