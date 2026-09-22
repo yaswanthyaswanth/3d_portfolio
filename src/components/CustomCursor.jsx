@@ -30,9 +30,9 @@ const CustomCursor = () => {
 
     const handleMouseOver = (e) => {
       if (
-        e.target.tagName === 'A' || 
-        e.target.tagName === 'BUTTON' || 
-        e.target.closest('a') || 
+        e.target.tagName === 'A' ||
+        e.target.tagName === 'BUTTON' ||
+        e.target.closest('a') ||
         e.target.closest('button') ||
         e.target.classList.contains('cursor-pointer')
       ) {
