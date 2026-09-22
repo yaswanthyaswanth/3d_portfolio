@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 
 import CanvasLoader from "../Loader";
 import { useState, useEffect } from "react";
@@ -46,11 +47,11 @@ const EarthCanvas = () => {
       <CanvasErrorBoundary>
         <Canvas
           shadows={!isMobile}
-          frameloop='demand'
+          frameloop='always' // required for postprocessing
           dpr={isMobile ? 1 : [1, 2]}
           gl={{ 
             preserveDrawingBuffer: false, 
-            antialias: !isMobile, 
+            antialias: false, 
             powerPreference: "high-performance" 
           }}
           camera={{
@@ -68,6 +69,12 @@ const EarthCanvas = () => {
               minPolarAngle={Math.PI / 2}
             />
             <Earth />
+            
+            <EffectComposer disableNormalPass>
+              <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.5} />
+              <Vignette eskil={false} offset={0.1} darkness={1.1} />
+            </EffectComposer>
+
             <Preload all />
           </Suspense>
         </Canvas>

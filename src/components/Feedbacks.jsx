@@ -169,13 +169,15 @@ const Feedbacks = () => {
               <img
                 src={`/images/${comparison.beforeImage}`}
                 alt={`Before ${comparison.title}`}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                onClick={() => window.open(`/images/${comparison.beforeImage}`, '_blank')}
               />
               <div
-                className="absolute inset-0 overflow-hidden"
+                className="absolute inset-0 overflow-hidden cursor-pointer"
                 style={{
                   clipPath: `inset(0 ${100 - sliderPositions[index]}% 0 0)`,
                 }}
+                onClick={() => window.open(`/images/${comparison.afterImage}`, '_blank')}
               >
                 <img
                   src={`/images/${comparison.afterImage}`}
@@ -187,8 +189,9 @@ const Feedbacks = () => {
               <div
                 className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize z-10"
                 style={{ left: `${sliderPositions[index]}%` }}
-                onMouseDown={(e) => handleMouseDown(index, e)}
-                onTouchStart={(e) => handleTouchStart(index, e)}
+                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(index, e); }}
+                onTouchStart={(e) => { e.stopPropagation(); handleTouchStart(index, e); }}
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-5 h-10 bg-white rounded-full flex items-center justify-center">
                   <div className="w-1 h-5 bg-gray-800"></div>
@@ -210,7 +213,8 @@ const Feedbacks = () => {
             <img
               src={`/images/${project.image}`}
               alt={project.title}
-              className="w-full h-[400px] object-cover rounded-xl"
+              className="w-full h-[400px] object-cover rounded-xl cursor-pointer"
+              onClick={() => window.open(`/images/${project.image}`, '_blank')}
             />
             <div className="mt-4">
               <h3 className="text-white font-medium text-lg">{project.title}</h3>
@@ -224,7 +228,8 @@ const Feedbacks = () => {
             <img
               src={`/images/${project.image}`}
               alt={project.title}
-              className="w-full h-[400px] object-cover rounded-xl"
+              className="w-full h-[400px] object-cover rounded-xl cursor-pointer"
+              onClick={() => window.open(`/images/${project.image}`, '_blank')}
             />
             <div className="mt-4">
               <h3 className="text-white font-medium text-lg">{project.title}</h3>
@@ -238,7 +243,8 @@ const Feedbacks = () => {
             <img
               src={`/images/${project.image}`}
               alt={project.title}
-              className="w-full h-[400px] object-cover rounded-xl"
+              className="w-full h-[400px] object-cover rounded-xl cursor-pointer"
+              onClick={() => window.open(`/images/${project.image}`, '_blank')}
             />
             <div className="mt-4">
               <h3 className="text-white font-medium text-lg">{project.title}</h3>

@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
+import { EffectComposer, Bloom, Noise, Vignette } from "@react-three/postprocessing";
 
 import CanvasLoader from "../Loader";
 
@@ -29,16 +30,16 @@ const Computers = ({ isMobile }) => {
   return (
     <mesh>
       {/* Ambient Light: Baseline illumination for transparent textures */}
-      <ambientLight intensity={0.0} color="#ffffff" />
+      <ambientLight intensity={0.2} color="#ffffff" />
       {/* Key Light: Strong directional light from right corner, top-down */}
       <spotLight
         position={[20, 50, 10]}
-        angle={0.2}
-        penumbra={0.8}
-        intensity={1.5}
+        angle={0.3}
+        penumbra={1}
+        intensity={2.5}
         castShadow
         shadow-mapSize={1024}
-        color="#ffffff"
+        color="#a276ff" // slight purple tint for cinematic look
       />
       {/* Fill Light: Soft, even lighting to reduce shadows */}
       <spotLight
@@ -51,8 +52,8 @@ const Computers = ({ isMobile }) => {
       {/* Back Light: Subtle rim effect for depth */}
       <pointLight
         position={[0, 15, -15]}
-        intensity={1.0}
-        color="#ffffff"
+        intensity={1.5}
+        color="#00e5ff" // cyan rim light
       />
       <primitive
         object={computer.scene}
@@ -86,35 +87,42 @@ const ComputersCanvas = () => {
     <div style={{ width: "100%", height: "100%" }}>
       <CanvasErrorBoundary>
         <Canvas
-          frameloop='demand'
-          shadows={!isMobile} // Disable memory-heavy shadows on mobile
+          frameloop='always' // required for animated noise
+          shadows={!isMobile} 
           dpr={isMobile ? 1 : [1, 2]}
           camera={{ position: [20, 3, 5], fov: 25 }}
           gl={{ 
-            preserveDrawingBuffer: false, // Critical for preventing mobile crashes
+            preserveDrawingBuffer: false, 
             alpha: true,
-            antialias: !isMobile, // Disable antialiasing on mobile to save memory
+            antialias: false, // Turn off MSAA for postprocessing
             powerPreference: "high-performance" 
           }}
           className="touch-pinch-zoom"
         >
-      <Suspense fallback={<CanvasLoader />}>
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          maxPolarAngle={Math.PI / 2}
-          minPolarAngle={Math.PI / 2}
-          minDistance={10}
-          maxDistance={50}
-          autoRotate={true}
-          autoRotateSpeed={2.0}
-        />
-        <Computers isMobile={isMobile} />
-      </Suspense>
-      <Preload all />
-    </Canvas>
-  </CanvasErrorBoundary>
-</div>
+          <Suspense fallback={<CanvasLoader />}>
+            <OrbitControls
+              enableZoom={false}
+              enablePan={false}
+              maxPolarAngle={Math.PI / 2}
+              minPolarAngle={Math.PI / 2}
+              minDistance={10}
+              maxDistance={50}
+              autoRotate={true}
+              autoRotateSpeed={0.5} // Slowed down for cinematic feel
+            />
+            <Computers isMobile={isMobile} />
+            
+            <EffectComposer disableNormalPass>
+              <Bloom luminanceThreshold={0.5} mipmapBlur intensity={1.2} />
+              <Noise opacity={0.05} />
+              <Vignette eskil={false} offset={0.1} darkness={1.1} />
+            </EffectComposer>
+
+          </Suspense>
+          <Preload all />
+        </Canvas>
+      </CanvasErrorBoundary>
+    </div>
   );
 };
 

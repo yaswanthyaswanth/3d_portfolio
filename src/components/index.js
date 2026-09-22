@@ -10,6 +10,7 @@ import Contact from "./Contact";
 import CanvasLoader from "./Loader";
 import Preloader from "./Preloader";
 import TourSelection from "./TourSelection";
+import CustomCursor from "./CustomCursor";
 
 export {
   Hero,
@@ -26,5 +27,6 @@ export {
   ComputersCanvas, 
   StarsCanvas,
   Preloader,
-  TourSelection
+  TourSelection,
+  CustomCursor
 };

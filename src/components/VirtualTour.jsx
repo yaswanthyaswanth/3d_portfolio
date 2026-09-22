@@ -508,6 +508,16 @@ function VirtualTourInner({ tourData, orderedIds, meshGlb }) {
   const [hasStartedMobile, setHasStartedMobile] = useState(false);
   const fadingRef = useRef(false);
 
+  // Preload all panorama images in the background to eliminate teleportation delay
+  useEffect(() => {
+    if (tourData) {
+      Object.values(tourData).forEach(data => {
+        const img = new Image();
+        img.src = data.panorama;
+      });
+    }
+  }, [tourData]);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
