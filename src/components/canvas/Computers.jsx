@@ -27,6 +27,23 @@ class CanvasErrorBoundary extends React.Component {
 const Computers = ({ isMobile }) => {
   const computer = useGLTF("./desktop_pc/scene.gltf");
 
+  useEffect(() => {
+    if (computer.scene) {
+      computer.scene.traverse((child) => {
+        if (child.isMesh && child.material) {
+          // Fix for character hair/transparency sorting issues
+          // GLTF often exports hair as transparent = true, which causes depth sorting bugs in WebGL
+          if (child.material.transparent) {
+            child.material.transparent = false;
+            child.material.alphaTest = 0.5; // Discard pixels below 0.5 alpha
+            child.material.depthWrite = true;
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [computer.scene]);
+
   return (
     <mesh>
       {/* Ambient Light: Baseline illumination for transparent textures */}
