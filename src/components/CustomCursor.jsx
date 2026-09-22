@@ -12,9 +12,14 @@ const CustomCursor = () => {
 
   // Disable custom cursor in the virtual tour routes
   const isVirtualTour = location.pathname.startsWith('/tour');
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
-    if (isVirtualTour) return;
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  useEffect(() => {
+    if (isVirtualTour || isTouchDevice) return;
 
     const updateMousePosition = (e) => {
       setMousePosition({
@@ -44,9 +49,9 @@ const CustomCursor = () => {
       window.removeEventListener("mousemove", updateMousePosition);
       window.removeEventListener("mouseover", handleMouseOver);
     };
-  }, [isVirtualTour]);
+  }, [isVirtualTour, isTouchDevice]);
 
-  if (isVirtualTour) return null;
+  if (isVirtualTour || isTouchDevice) return null;
 
   const variants = {
     default: {
