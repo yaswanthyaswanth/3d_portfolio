@@ -111,12 +111,6 @@ const ComputersCanvas = () => {
               autoRotateSpeed={0.5} // Slowed down for cinematic feel
             />
             <Computers isMobile={isMobile} />
-            
-            <EffectComposer disableNormalPass>
-              <Bloom luminanceThreshold={0.5} mipmapBlur intensity={1.2} />
-              <Noise opacity={0.05} />
-              <Vignette eskil={false} offset={0.1} darkness={1.1} />
-            </EffectComposer>
 
           </Suspense>
           <Preload all />

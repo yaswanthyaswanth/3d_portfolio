@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 const CustomCursor = () => {
   const [mousePosition, setMousePosition] = useState({
@@ -7,8 +8,14 @@ const CustomCursor = () => {
     y: 0
   });
   const [isHovering, setIsHovering] = useState(false);
+  const location = useLocation();
+
+  // Disable custom cursor in the virtual tour routes
+  const isVirtualTour = location.pathname.startsWith('/tour');
 
   useEffect(() => {
+    if (isVirtualTour) return;
+
     const updateMousePosition = (e) => {
       setMousePosition({
         x: e.clientX,
@@ -37,7 +44,9 @@ const CustomCursor = () => {
       window.removeEventListener("mousemove", updateMousePosition);
       window.removeEventListener("mouseover", handleMouseOver);
     };
-  }, []);
+  }, [isVirtualTour]);
+
+  if (isVirtualTour) return null;
 
   const variants = {
     default: {

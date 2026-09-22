@@ -70,11 +70,6 @@ const EarthCanvas = () => {
             />
             <Earth />
             
-            <EffectComposer disableNormalPass>
-              <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.5} />
-              <Vignette eskil={false} offset={0.1} darkness={1.1} />
-            </EffectComposer>
-
             <Preload all />
           </Suspense>
         </Canvas>
