@@ -120,7 +120,9 @@
 
      @media (max-width: 640px) {
        .frame-container {
+         width: 320px;
          height: 240px;
+         margin: 0 auto;
        }
 
        .frame-image {
