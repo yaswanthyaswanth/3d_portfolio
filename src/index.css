@@ -109,16 +109,16 @@
        left: 5%;
        width: 110%;
        height: 90%;
-       object-fit: contain;
+        object-fit: contain;
      }
 
      .video-inside-frame {
-       top: 12%;
-       left: 18%;
-       width: 74%;
-       height: 83%;
-       border-radius: 30px;
-       object-fit: contain;
+       top: 12.5%;
+       left: 18.5%;
+       width: 73%;
+       height: 82%;
+       border-radius: 38px;
+       object-fit: cover;
      }
 
 
