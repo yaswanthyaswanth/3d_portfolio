@@ -36,7 +36,7 @@ const ProjectCard = ({ index, name, description, tags, video, source_code_link }
         <motion.div
           style={{ scale }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="relative w-full h-[360px] frame-container flex items-center justify-center"
+          className="relative w-full frame-container flex items-center justify-center"
         >
           {/* Frame image as an overlay */}
           <img
