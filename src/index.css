@@ -123,6 +123,15 @@
 
 
 
+     @media (max-width: 640px) {
+       .frame-container {
+         transform: scale(1.45);
+         transform-origin: center;
+         margin-top: 25px;
+         margin-bottom: 25px;
+       }
+     }
+
      @keyframes mulShdSpin {
        0%, 100% {
          box-shadow: 0em -2.6em 0em 0em #ffffff,
