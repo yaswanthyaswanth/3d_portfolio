@@ -129,8 +129,10 @@
          transform-origin: center;
          margin-top: 25px;
          margin-bottom: 25px;
-       }
-     }
+        .video-inside-frame {
+          border-radius: 12px;
+        }
+        .video-inside-frame {
 
      @keyframes mulShdSpin {
        0%, 100% {
