@@ -89,15 +89,15 @@ const imageComparisons = [
 
 const projectShowcase1 = [
   {
-    title: "Unreal 360° Gallery",
-    description: "Immersive panoramic environments (5 Views)",
+    title: "Archviz 360° Gallery",
+    description: "Architectural building renders (5 Views)",
     image: "360_gallery/360_1.jpg",
     isGallery: true,
     galleryImages: ["360_gallery/360_1.jpg", "360_gallery/360_2.jpg", "360_gallery/360_3.jpg", "360_gallery/360_4.jpg", "360_gallery/360_5.jpg"],
   },
   {
-    title: "Sci-Fi Environment",
-    description: "A futuristic cityscape created in Blender",
+    title: "VIP Parking Area",
+    description: "High-detail luxury car base parking area",
     image: "projects/project1.jpg",
   },
   {
