@@ -10,6 +10,10 @@ import * as THREE from "three";
 const Panorama = ({ url }) => {
   const texture = useTexture(url);
   texture.encoding = THREE.sRGBEncoding;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
   return (
     <mesh>
       <sphereGeometry args={[500, 60, 40]} />
@@ -382,10 +386,10 @@ const Feedbacks = () => {
             </button>
           )}
 
-          <div className="w-full h-full max-w-[1400px] max-h-[800px] md:p-8">
-            <div className="w-full h-full rounded-2xl overflow-hidden relative bg-black-200">
+          <div className="w-full h-full">
+            <div className="w-full h-full relative bg-black">
               <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-white text-xl">Loading High-Res 360° Panorama...</div>}>
-                <Canvas camera={{ position: [0, 0, 0.1] }}>
+                <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 0.1], fov: 70 }}>
                   <OrbitControls enableZoom={true} enablePan={false} enableDamping dampingFactor={0.2} autoRotate autoRotateSpeed={0.5} reverseOrbit />
                   <Panorama url={`/images/${selected360Image.images ? selected360Image.images[selected360Image.currentIndex] : selected360Image}`} />
                 </Canvas>
