@@ -47,19 +47,19 @@ const Computers = ({ isMobile }) => {
   return (
     <mesh>
       {/* Realistic lighting setup for character models */}
-      <ambientLight intensity={0.7} color="#ffffff" />
+      <hemisphereLight intensity={0.5} skyColor="#ffffff" groundColor="#444444" />
+      <ambientLight intensity={0.5} color="#ffffff" />
       <directionalLight
         position={[10, 20, 10]}
         intensity={1.2}
         castShadow
-        shadow-mapSize={1024}
+        shadow-mapSize={[1024, 1024]}
       />
       <directionalLight
         position={[-10, -10, -10]}
         intensity={0.5}
         color="#8aaae5"
       />
-      <Environment preset="city" />
       
       <primitive
         object={computer.scene}
