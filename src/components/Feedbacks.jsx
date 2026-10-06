@@ -1,8 +1,22 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, Suspense } from "react";
 import { motion } from "framer-motion";
 import { styles } from "../styles";
 import { SectionWrapper } from "../hoc";
 import { textVariant } from "../utils/motion";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, useTexture, Html } from "@react-three/drei";
+import * as THREE from "three";
+
+const Panorama = ({ url }) => {
+  const texture = useTexture(url);
+  return (
+    <mesh>
+      <sphereGeometry args={[500, 60, 40]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} />
+    </mesh>
+  );
+};
+
 
 const imageComparisons = [
   {
@@ -33,24 +47,29 @@ const imageComparisons = [
 
 const projectShowcase1 = [
   {
-    title: "Sci-Fi Environment",
-    description: "A futuristic cityscape created in Blender",
-    image: "project1.jpg",
+    title: "Sci-Fi Environment 360",
+    description: "Immersive futuristic cityscape",
+    image: "360_1.jpg",
   },
   {
-    title: "Character Model",
-    description: "High-detail character for VR game",
-    image: "project2.jpg",
+    title: "Character Room 360",
+    description: "High-detail interior space",
+    image: "360_2.jpg",
   },
   {
-    title: "AR Lens Effect",
-    description: "Interactive lens for Snapchat",
-    image: "project3.jpg",
+    title: "Level Design 360",
+    description: "Interactive environment overview",
+    image: "360_3.jpg",
   },
   {
-    title: "Unreal Engine Level",
+    title: "Unreal Engine Level 360",
     description: "Optimized level for Oculus Quest",
-    image: "project4.jpg",
+    image: "360_4.jpg",
+  },
+  {
+    title: "Cyberpunk Street 360",
+    description: "Neon-lit environment in Unreal",
+    image: "360_5.jpg",
   },
 ];
 
@@ -105,6 +124,7 @@ const Feedbacks = () => {
     imageComparisons.map(() => 50)
   );
   const [activeSection, setActiveSection] = useState("showcase1");
+  const [selected360Image, setSelected360Image] = useState(null);
   const containerRefs = useRef([]);
 
   const handleSliderStart = (index, clientX, isTouch = false) => {
@@ -210,12 +230,21 @@ const Feedbacks = () => {
       case "showcase1":
         return projectShowcase1.map((project, index) => (
           <div key={index} className="bg-black-200 p-5 rounded-3xl">
-            <img
-              src={`/images/${project.image}`}
-              alt={project.title}
-              className="w-full h-[400px] object-cover rounded-xl cursor-pointer"
-              onClick={() => window.open(`/images/${project.image}`, '_blank')}
-            />
+            <div className="relative group cursor-pointer h-[400px] rounded-xl overflow-hidden" onClick={() => project.image.includes('360') ? setSelected360Image(`/images/${project.image}`) : window.open(`/images/${project.image}`, '_blank')}>
+              <img
+                src={`/images/${project.image}`}
+                alt={project.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              {project.image.includes('360') && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="flex flex-col items-center">
+                    <svg className="w-16 h-16 text-white mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    <span className="text-white font-bold tracking-wider">CLICK TO VIEW 360°</span>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="mt-4">
               <h3 className="text-white font-medium text-lg">{project.title}</h3>
               <p className="text-secondary text-sm mt-1">{project.description}</p>
@@ -319,6 +348,32 @@ const Feedbacks = () => {
           {getContent()}
         </motion.div>
       </div>
+      </div>
+
+      {/* 360 Viewer Modal */}
+      {selected360Image && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90">
+          <button 
+            onClick={() => setSelected360Image(null)}
+            className="absolute top-6 right-6 text-white hover:text-gray-300 z-[101] bg-black/50 rounded-full p-2"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+          <div className="w-full h-full max-w-[1400px] max-h-[800px] md:p-8">
+            <div className="w-full h-full rounded-2xl overflow-hidden relative bg-black-200">
+              <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-white">Loading 360° Panorama...</div>}>
+                <Canvas camera={{ position: [0, 0, 0.1] }}>
+                  <OrbitControls enableZoom={true} enablePan={false} enableDamping dampingFactor={0.2} autoRotate autoRotateSpeed={0.5} reverseOrbit />
+                  <Panorama url={selected360Image} />
+                </Canvas>
+              </Suspense>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm pointer-events-none">
+                Drag to look around
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
