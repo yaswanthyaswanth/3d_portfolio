@@ -64,26 +64,26 @@ const imageComparisons = [
   {
     title: "M762 Gun Model",
     description: "#Blender #substance",
-    beforeImage: "before1.jpg",
-    afterImage: "after1.jpg",
+    beforeImage: "blender_comparisons/before1.jpg",
+    afterImage: "blender_comparisons/after1.jpg",
   },
   {
     title: "(Ref)Dragon Booster",
     description: "#Blender #ToonShader",
-    beforeImage: "before2.jpg",
-    afterImage: "after2.jpg",
+    beforeImage: "blender_comparisons/before2.jpg",
+    afterImage: "blender_comparisons/after2.jpg",
   },
   {
     title: "Forklift Truck",
     description: "#Blender #substance",
-    beforeImage: "before3.jpg",
-    afterImage: "after3.jpg",
+    beforeImage: "blender_comparisons/before3.jpg",
+    afterImage: "blender_comparisons/after3.jpg",
   },
   {
     title: "WOODEN_WAGON",
     description: "#Blender",
-    beforeImage: "before4.jpg",
-    afterImage: "after4.jpg",
+    beforeImage: "blender_comparisons/before4.jpg",
+    afterImage: "blender_comparisons/after4.jpg",
   },
 ];
 
@@ -91,29 +91,29 @@ const projectShowcase1 = [
   {
     title: "Unreal 360° Gallery",
     description: "Immersive panoramic environments (5 Views)",
-    image: "360_1.jpg",
+    image: "360_gallery/360_1.jpg",
     isGallery: true,
-    galleryImages: ["360_1.jpg", "360_2.jpg", "360_3.jpg", "360_4.jpg", "360_5.jpg"],
+    galleryImages: ["360_gallery/360_1.jpg", "360_gallery/360_2.jpg", "360_gallery/360_3.jpg", "360_gallery/360_4.jpg", "360_gallery/360_5.jpg"],
   },
   {
     title: "Sci-Fi Environment",
     description: "A futuristic cityscape created in Blender",
-    image: "project1.jpg",
+    image: "projects/project1.jpg",
   },
   {
     title: "Character Model",
     description: "High-detail character for VR game",
-    image: "project2.jpg",
+    image: "projects/project2.jpg",
   },
   {
     title: "AR Lens Effect",
     description: "Interactive lens for Snapchat",
-    image: "project3.jpg",
+    image: "projects/project3.jpg",
   },
   {
     title: "Unreal Engine Level",
     description: "Optimized level for Oculus Quest",
-    image: "project4.jpg",
+    image: "projects/project4.jpg",
   },
 ];
 
@@ -121,22 +121,22 @@ const projectShowcase2 = [
   {
     title: "Medieval Village",
     description: "Low-poly village scene in Unity",
-    image: "project5.jpg",
+    image: "projects/project5.jpg",
   },
   {
     title: "Robot Concept",
     description: "Futuristic robot model in Blender",
-    image: "project6.jpg",
+    image: "projects/project6.jpg",
   },
   {
     title: "VR Puzzle Game",
     description: "Interactive puzzle for VR",
-    image: "project7.jpg",
+    image: "projects/project7.jpg",
   },
   {
     title: "Fantasy Creature",
     description: "Sculpted creature in ZBrush",
-    image: "project8.jpg",
+    image: "projects/project8.jpg",
   },
 ];
 
@@ -144,22 +144,22 @@ const projectShowcase3 = [
   {
     title: "Space Station",
     description: "Modular space station in Unreal Engine",
-    image: "project9.jpg",
+    image: "projects/project9.jpg",
   },
   {
     title: "Cyberpunk Street",
     description: "Neon-lit street scene in Blender",
-    image: "project10.jpg",
+    image: "projects/project10.jpg",
   },
   {
     title: "AR Filter",
     description: "Custom AR filter for Instagram",
-    image: "project11.jpg",
+    image: "projects/project11.jpg",
   },
   {
     title: "Animated Character",
     description: "Rigged character with animations",
-    image: "project12.jpg",
+    image: "projects/project12.jpg",
   },
 ];
 
