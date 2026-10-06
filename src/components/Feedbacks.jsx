@@ -348,7 +348,6 @@ const Feedbacks = () => {
           {getContent()}
         </motion.div>
       </div>
-      </div>
 
       {/* 360 Viewer Modal */}
       {selected360Image && (
