@@ -1,9 +1,9 @@
-import React, { useState, useRef, Suspense } from "react";
+import React, { useState, useRef, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
 import { styles } from "../styles";
 import { SectionWrapper } from "../hoc";
 import { textVariant } from "../utils/motion";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -20,6 +20,27 @@ const Panorama = ({ url }) => {
       <meshBasicMaterial map={texture} side={THREE.BackSide} />
     </mesh>
   );
+};
+
+const ZoomHandler = () => {
+  const { camera, gl } = useThree();
+
+  useEffect(() => {
+    const handleWheel = (e) => {
+      e.preventDefault();
+      // Calculate new FOV: original is 70, max zoom is 40
+      let newFov = camera.fov + (e.deltaY > 0 ? 5 : -5);
+      newFov = Math.max(40, Math.min(70, newFov));
+      camera.fov = newFov;
+      camera.updateProjectionMatrix();
+    };
+    
+    const domElement = gl.domElement;
+    domElement.addEventListener('wheel', handleWheel, { passive: false });
+    return () => domElement.removeEventListener('wheel', handleWheel);
+  }, [camera, gl]);
+
+  return null;
 };
 
 
@@ -390,7 +411,8 @@ const Feedbacks = () => {
             <div className="w-full h-full relative bg-black">
               <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center text-white text-xl">Loading High-Res 360° Panorama...</div>}>
                 <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 0.1], fov: 70 }}>
-                  <OrbitControls enableZoom={true} enablePan={false} enableDamping dampingFactor={0.2} autoRotate autoRotateSpeed={0.5} reverseOrbit />
+                  <ZoomHandler />
+                  <OrbitControls enableZoom={false} enablePan={false} enableDamping dampingFactor={0.2} autoRotate autoRotateSpeed={0.5} reverseOrbit />
                   <Panorama url={`/images/${selected360Image.images ? selected360Image.images[selected360Image.currentIndex] : selected360Image}`} />
                 </Canvas>
               </Suspense>
