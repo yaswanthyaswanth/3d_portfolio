@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
+import { OrbitControls, Preload, useGLTF, Environment } from "@react-three/drei";
 import { EffectComposer, Bloom, Noise, Vignette } from "@react-three/postprocessing";
 
 import CanvasLoader from "../Loader";
@@ -46,37 +46,26 @@ const Computers = ({ isMobile }) => {
 
   return (
     <mesh>
-      {/* Ambient Light: Baseline illumination for transparent textures */}
-      <ambientLight intensity={0.2} color="#ffffff" />
-      {/* Key Light: Strong directional light from right corner, top-down */}
-      <spotLight
-        position={[20, 50, 10]}
-        angle={0.3}
-        penumbra={1}
-        intensity={2.5}
+      {/* Realistic lighting setup for character models */}
+      <ambientLight intensity={0.7} color="#ffffff" />
+      <directionalLight
+        position={[10, 20, 10]}
+        intensity={1.2}
         castShadow
         shadow-mapSize={1024}
-        color="#a276ff" // slight purple tint for cinematic look
       />
-      {/* Fill Light: Soft, even lighting to reduce shadows */}
-      <spotLight
-        position={[-10, 20, 15]}
-        angle={0.4}
-        penumbra={1}
-        intensity={1.0}
-        color="#ffffff"
+      <directionalLight
+        position={[-10, -10, -10]}
+        intensity={0.5}
+        color="#8aaae5"
       />
-      {/* Back Light: Subtle rim effect for depth */}
-      <pointLight
-        position={[0, 15, -15]}
-        intensity={1.5}
-        color="#00e5ff" // cyan rim light
-      />
+      <Environment preset="city" />
+      
       <primitive
         object={computer.scene}
-        scale={isMobile ? 0.6 : 0.75}
-        position={isMobile ? [0, -4, -2.2] : [0, -5, -1.5]}
-        rotation={[-0.01, -0.8, -0.1]}
+        scale={isMobile ? 0.55 : 0.65}
+        position={isMobile ? [0, -3.5, -3] : [0, -4.5, -2.5]}
+        rotation={[-0.01, -0.5, -0.1]}
       />
     </mesh>
   );
