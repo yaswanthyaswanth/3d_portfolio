@@ -4,10 +4,10 @@ import { styles } from "../styles";
 import { SectionWrapper } from "../hoc";
 import { textVariant } from "../utils/motion";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, useTexture, Html } from "@react-three/drei";
+import { OrbitControls, useTexture, useVideoTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
 
-const Panorama = ({ url }) => {
+const PanoramaImage = ({ url }) => {
   const texture = useTexture(url);
   texture.encoding = THREE.sRGBEncoding;
   texture.generateMipmaps = false;
@@ -20,6 +20,22 @@ const Panorama = ({ url }) => {
       <meshBasicMaterial map={texture} side={THREE.BackSide} />
     </mesh>
   );
+};
+
+const PanoramaVideo = ({ url }) => {
+  const texture = useVideoTexture(url, { muted: true, loop: true, start: true });
+  texture.encoding = THREE.sRGBEncoding;
+  return (
+    <mesh>
+      <sphereGeometry args={[500, 60, 40]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} />
+    </mesh>
+  );
+};
+
+const Panorama = ({ url }) => {
+  const isVideo = url.match(/\.(mp4|webm|mov)$/i);
+  return isVideo ? <PanoramaVideo url={url} /> : <PanoramaImage url={url} />;
 };
 
 const ZoomHandler = () => {
